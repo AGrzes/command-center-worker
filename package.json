@@ -36,6 +36,7 @@
   "author": "Grzegorz Abramczyk <abramczykg@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "debug": "^4.0.1",
     "express": "^4.16.3",
     "ouch-rx": "^1.2.0",
     "pouchdb-http": "^6.0.2",

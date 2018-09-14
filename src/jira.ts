@@ -1,3 +1,4 @@
+import * as debug from 'debug'
 import { json, Router} from 'express'
 import { Ouch, override } from 'ouch-rx'
 import * as PouchDB from 'pouchdb-http'
@@ -5,6 +6,8 @@ import {Subject} from 'rxjs'
 import { map } from 'rxjs/operators'
 
 type Issue = {key: string} & any
+
+const log = debug('jira:pump')
 
 const router = Router()
 const db = new PouchDB('http://couchdb.home.agrzes.pl:5984/jira')
@@ -14,8 +17,7 @@ sink.pipe(map((issue) => {
   issue._id = issue.key
   return issue
 }), ouch.merge(override)).subscribe({next(x) {
-  console.log(`Processed change ${x}`)
-  //
+  log(`Processed change ${x}`)
 }})
 function push(issue: {key: string} & any) {
   sink.next(issue)
