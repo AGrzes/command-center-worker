@@ -1,0 +1,11 @@
+{
+  "name": "job-server",
+  "version": "0.0.1",
+  "description": "",
+  "main": "target",
+  "scripts": {
+    "test": "nyc mocha test/**/*.{ts,tsx}"
+  },
+  "author": "Grzegorz Abramczyk <abramczykg@gmail.com>",
+  "license": "MIT"
+}
