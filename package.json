@@ -36,10 +36,17 @@
   "author": "Grzegorz Abramczyk <abramczykg@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "express": "^4.16.3"
+    "express": "^4.16.3",
+    "ouch-rx": "^1.2.0",
+    "pouchdb-http": "^6.0.2",
+    "rxjs": "^6.3.2"
   },
   "devDependencies": {
+    "@types/chai": "^4.1.4",
     "@types/express": "^4.16.0",
+    "@types/mocha": "^5.2.5",
+    "@types/node": "^10.9.4",
+    "@types/pouchdb-http": "^6.1.2",
     "chai": "^4.1.2",
     "coveralls": "^3.0.2",
     "mocha": "^5.2.0",
