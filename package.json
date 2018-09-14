@@ -4,7 +4,34 @@
   "description": "",
   "main": "target",
   "scripts": {
-    "test": "nyc mocha test/**/*.{ts,tsx}"
+    "coverage": "nyc report --reporter=text-lcov | coveralls",
+    "test": "nyc mocha test/**/*.{ts,tsx}",
+    "build": "rm -rf target && tsc",
+    "format": "tslint 'src/**/*.ts' --fix",
+    "lint": "tslint 'src/**/*.ts'",
+    "start": "node target"
+  },
+  "nyc": {
+    "all": true,
+    "extension": [
+      ".ts",
+      ".tsx"
+    ],
+    "exclude": [
+      "**/*.d.ts",
+      "web/**"
+    ],
+    "include": [
+      "src/**/*"
+    ],
+    "reporter": [
+      "html",
+      "text"
+    ],
+    "require": [
+      "ts-node/register",
+      "source-map-support/register"
+    ]
   },
   "author": "Grzegorz Abramczyk <abramczykg@gmail.com>",
   "license": "MIT",
@@ -12,6 +39,14 @@
     "express": "^4.16.3"
   },
   "devDependencies": {
-    "@types/express": "^4.16.0"
+    "@types/express": "^4.16.0",
+    "chai": "^4.1.2",
+    "coveralls": "^3.0.2",
+    "mocha": "^5.2.0",
+    "nyc": "^13.0.1",
+    "source-map-support": "^0.5.9",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.11.0",
+    "typescript": "^3.0.3"
   }
 }
