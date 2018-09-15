@@ -1,5 +1,6 @@
 import * as debug from 'debug'
 import { json, Router} from 'express'
+import * as _ from 'lodash'
 import { Ouch, override } from 'ouch-rx'
 import * as PouchDB from 'pouchdb-http'
 import {Subject} from 'rxjs'
@@ -42,6 +43,17 @@ function issueToProgressItem(issue: any): PouchDB.Core.Document<ProgressItem> {
   return {
     summary: issue.fields.summary,
     status: issue.fields.status.name,
+    defined: issue.fields.created,
+    resolved: issue.fields.resolutiondate,
+    labels: [
+      'jira',
+      issue.fields.issuetype.name,
+      ...issue.fields.labels,
+      ..._.map(issue.fields.customfield_10100, (value) => `action-type:${value}`),
+      ..._.map(issue.fields.customfield_10101, (value) => `action-energy:${value}`),
+      ..._.map(issue.fields.customfield_10102, (value) => `action-time:${value}`),
+      ..._.map(issue.fields.customfield_10000, (value) => `action-context:${value}`)
+    ],
     _id: `jira:${issue.key}`
   }
 }
