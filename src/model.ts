@@ -11,3 +11,7 @@ export interface ProgressItem {
   status: 'defined' | 'resolved' // item status
   categories?: Category[] // item categories
 }
+
+export interface WorkerStatus {
+  sequence?: string | number
+}
