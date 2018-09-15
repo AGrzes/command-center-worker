@@ -38,6 +38,7 @@
   "dependencies": {
     "debug": "^4.0.1",
     "express": "^4.16.3",
+    "lodash": "^4.17.11",
     "ouch-rx": "^1.2.0",
     "pouchdb-http": "^6.0.2",
     "rxjs": "^6.3.2"
@@ -45,6 +46,7 @@
   "devDependencies": {
     "@types/chai": "^4.1.4",
     "@types/express": "^4.16.0",
+    "@types/lodash": "^4.14.116",
     "@types/mocha": "^5.2.5",
     "@types/node": "^10.9.4",
     "@types/pouchdb-http": "^6.1.2",
