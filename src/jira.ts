@@ -3,8 +3,8 @@ import { json, Router} from 'express'
 import * as _ from 'lodash'
 import { Ouch, override } from 'ouch-rx'
 import * as PouchDB from 'pouchdb-http'
-import {Subject} from 'rxjs'
-import { map, debounceTime } from 'rxjs/operators'
+import {empty, of, Subject} from 'rxjs'
+import { debounceTime, flatMap, map } from 'rxjs/operators'
 import { ProgressItem, WorkerStatus } from './model'
 
 type Issue = {key: string} & any
@@ -69,9 +69,13 @@ workerDb.get('jira-progress-item-pump')
       workerStatus._rev = updated.rev
     })
     ouchJira.changes({include_docs: true, live: true, since: workerStatus.sequence })
-    .pipe(map((change) => {
+    .pipe(flatMap((change) => {
       workerStatus.sequence = change.seq
-      return change.doc
+      if (change.doc) {
+        return of(change.doc)
+      } else {
+        return empty()
+      }
     }), map(issueToProgressItem), ouchProgress.merge(override))
     .subscribe((progressItem) => {
       log('Transformed issue %O', progressItem)
