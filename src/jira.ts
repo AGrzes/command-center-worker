@@ -72,10 +72,10 @@ workerDb.get('jira-progress-item-pump')
       log('Updated worker status %O', updated)
       workerStatus._rev = updated.rev
     })
-    ouchJira.changes({include_docs: true, live: true, since: workerStatus.sequence })
+    ouchJira.changes<any>({include_docs: true, live: true, since: workerStatus.sequence })
     .pipe(flatMap((change) => {
       workerStatus.sequence = change.seq
-      if (change.doc) {
+      if (change.doc && change.doc.fields) {
         return of(change.doc)
       } else {
         return empty()
