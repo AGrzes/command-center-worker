@@ -10,6 +10,7 @@ export interface ProgressItem {
   labels?: string[] // set of additional classification information
   status: 'defined' | 'resolved' // item status
   categories?: Category[] // item categories
+  details?: string
 }
 
 export interface WorkerStatus {
