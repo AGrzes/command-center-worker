@@ -34,7 +34,7 @@ function fetch(options: FetchOptions): Observable<any> {
         } else {
           observer.complete()
         }
-      })
+      }).catch((error) => observer.error(error))
     }
     const url = new URL('https://api.github.com/issues')
     url.searchParams.set('filter', 'all')
@@ -64,6 +64,8 @@ router.post('/fetch', json(),  (req, res) => {
     .subscribe({complete() {
       workerDb.put(workerStatus)
       res.send()
+    }, error(error) {
+      res.status(500).send(error)
     }})
   })
 })
@@ -74,7 +76,7 @@ function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<Progr
     details: issue.body,
     status: issue.state,
     defined: issue.created_at,
-    resolved: issue.close1d_at,
+    resolved: issue.closed_at,
     labels: [
       'github',
       `repository:${issue.repository.name}`,
