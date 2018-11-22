@@ -4,7 +4,9 @@
         "module": "commonjs",
         "sourceMap": true,
         "outDir": "target",
-        "rootDir": "src"
+        "rootDir": "src",
+        "lib": ["es5","es6"],
+        "skipLibCheck": true
     },
     "include": [
         "src"
