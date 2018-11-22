@@ -2,11 +2,10 @@ import * as debug from 'debug'
 import { json, Router} from 'express'
 import * as _ from 'lodash'
 import { Ouch, override } from 'ouch-rx'
-import * as PouchDB from 'pouchdb-http'
 import {empty, Observable, of, Subject} from 'rxjs'
 import { debounceTime, flatMap, map } from 'rxjs/operators'
 import { ProgressItem, WorkerStatus } from './model'
-
+import PouchDB from './pouchdb'
 type Issue = {key: string} & any
 
 const log = debug('jira:pump')

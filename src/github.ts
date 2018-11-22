@@ -4,10 +4,11 @@ import { json, Router } from 'express'
 import {parse as parseLinkHeader, Reference} from 'http-link-header'
 import * as _ from 'lodash'
 import { Ouch, override } from 'ouch-rx'
-import * as PouchDB from 'pouchdb-http'
 import {empty, Observable, Observer, of, Subject} from 'rxjs'
 import { debounceTime, flatMap, map, tap } from 'rxjs/operators'
+import { URL } from 'url'
 import { ProgressItem, WorkerStatus } from './model'
+import PouchDB from './pouchdb'
 const log = debug('github:pump')
 interface FetchOptions {
   token: string
