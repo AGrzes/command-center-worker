@@ -1,9 +1,12 @@
+import axios from 'axios'
 import * as debug from 'debug'
 import { json, Router} from 'express'
+import {JiraClient} from 'jira-adapter'
 import * as _ from 'lodash'
+import moment = require('moment')
 import { Ouch, override } from 'ouch-rx'
 import {empty, Observable, of, Subject} from 'rxjs'
-import { debounceTime, flatMap, map } from 'rxjs/operators'
+import { debounceTime, flatMap, map, tap, throttleTime } from 'rxjs/operators'
 import { ProgressItem, WorkerStatus } from './model'
 import PouchDB from './pouchdb'
 type Issue = {key: string} & any
@@ -11,7 +14,8 @@ type Issue = {key: string} & any
 const log = debug('jira:pump')
 
 const router = Router()
-const ouchJira = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/jira'))
+const jiraDb = new PouchDB('http://couchdb.home.agrzes.pl:5984/jira')
+const ouchJira = new Ouch(jiraDb)
 const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
 const workerDb = new PouchDB<WorkerStatus>('http://couchdb.home.agrzes.pl:5984/worker')
 const ouchWorker = new Ouch(workerDb)
@@ -38,6 +42,47 @@ router.post('/hook', json(),  (req, res) => {
       break
   }
   res.send()
+})
+
+const jiraClinet = new JiraClient(axios.create({
+  baseURL: process.env.JIRA_URL,
+  auth: {
+    username: process.env.JIRA_USERNAME,
+    password: process.env.JIRA_PASSWORD
+  }
+}))
+
+function fetch(updated?: string): Observable<any> {
+  if (updated) {
+    return jiraClinet.query(`updated >= '${moment(updated).format('YYYY-MM-DD HH:mm')}' order by updated asc`)
+  } else {
+    return jiraClinet.query('order by updated asc')
+  }
+}
+
+router.post('/fetch', (req, res) => {
+  workerDb.get('jira-couchdb-item-pump')
+  .catch((): PouchDB.Core.Document<WorkerStatus> => ({_id: 'jira-couchdb-item-pump', sequence: ''}))
+  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus>) => {
+    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus>>()
+    workerSubject.pipe(throttleTime(1000), ouchWorker.merge(override)).subscribe((updated) => {
+      log('Updated worker status %O', updated)
+      workerStatus._rev = updated.rev
+    })
+    fetch(workerStatus.sequence as string)
+    .pipe(tap((issue) => {
+      if (issue.fields.updated > workerStatus.sequence) {
+        workerStatus.sequence = issue.fields.updated
+        workerSubject.next(workerStatus)
+      }
+    }), map((issue) => ({...issue, _id: issue.key})), ouchJira.merge(override))
+    .subscribe({complete() {
+      workerSubject.next(workerStatus)
+      res.send()
+    }, error(error) {
+      res.status(500).send(error)
+    }})
+  })
 })
 
 function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<ProgressItem>> {
