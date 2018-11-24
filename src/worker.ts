@@ -39,6 +39,7 @@ export class Worker<K extends object, S, T> {
           workerSubject.next(workerStatus)
           subscriber.complete()
         }, error(error) {
+          log('Worker error %O', error)
           subscriber.error(error)
         }})
       })
