@@ -9,6 +9,7 @@ import {empty, Observable, of, Subject} from 'rxjs'
 import { debounceTime, flatMap, map, tap, throttleTime } from 'rxjs/operators'
 import { ProgressItem, WorkerStatus } from './model'
 import PouchDB from './pouchdb'
+import { Worker } from './worker'
 type Issue = {key: string} & any
 
 const log = debug('jira:pump')
@@ -17,7 +18,7 @@ const router = Router()
 const jiraDb = new PouchDB('http://couchdb.home.agrzes.pl:5984/jira')
 const ouchJira = new Ouch(jiraDb)
 const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
-const workerDb = new PouchDB<WorkerStatus>('http://couchdb.home.agrzes.pl:5984/worker')
+const workerDb = new PouchDB<WorkerStatus<string | number>>('http://couchdb.home.agrzes.pl:5984/worker')
 const ouchWorker = new Ouch(workerDb)
 const sink = new Subject<Issue>()
 sink.pipe(map((issue) => {
@@ -60,28 +61,16 @@ function fetch(updated?: string): Observable<any> {
   }
 }
 
+const jiraWorker = new Worker(workerDb, 'jira-couchdb-item-pump', fetch, '',
+  (issue) => issue.key, (issue) => issue.fields.updated, ouchJira)
+
 router.post('/fetch', (req, res) => {
-  workerDb.get('jira-couchdb-item-pump')
-  .catch((): PouchDB.Core.Document<WorkerStatus> => ({_id: 'jira-couchdb-item-pump', sequence: ''}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus>) => {
-    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus>>()
-    workerSubject.pipe(throttleTime(1000), ouchWorker.merge(override)).subscribe((updated) => {
-      log('Updated worker status %O', updated)
-      workerStatus._rev = updated.rev
-    })
-    fetch(workerStatus.sequence as string)
-    .pipe(tap((issue) => {
-      if (issue.fields.updated > workerStatus.sequence) {
-        workerStatus.sequence = issue.fields.updated
-        workerSubject.next(workerStatus)
-      }
-    }), map((issue) => ({...issue, _id: issue.key})), ouchJira.merge(override))
-    .subscribe({complete() {
-      workerSubject.next(workerStatus)
+    jiraWorker.run().subscribe({
+      complete() {
       res.send()
     }, error(error) {
       res.status(500).send(error)
-    }})
+    }
   })
 })
 
@@ -109,9 +98,9 @@ function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<Progr
 }
 
 workerDb.get('jira-progress-item-pump')
-  .catch((reason): PouchDB.Core.Document<WorkerStatus> => ({_id: 'jira-progress-item-pump'}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus>) => {
-    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus>>()
+  .catch((reason): PouchDB.Core.Document<WorkerStatus<string | number>> => ({_id: 'jira-progress-item-pump'}))
+  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus<string | number>>) => {
+    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus<string | number>>>()
     workerSubject.pipe(debounceTime(1000), ouchWorker.merge(override)).subscribe((updated) => {
       log('Updated worker status %O', updated)
       workerStatus._rev = updated.rev

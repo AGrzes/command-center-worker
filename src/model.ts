@@ -13,6 +13,6 @@ export interface ProgressItem {
   details?: string
 }
 
-export interface WorkerStatus {
-  sequence?: string | number
+export interface WorkerStatus<S> {
+  sequence?: S
 }

@@ -48,14 +48,14 @@ function fetch(options: FetchOptions): Observable<any> {
 
 }
 const ouchGithub = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/github'))
-const workerDb = new PouchDB<WorkerStatus>('http://couchdb.home.agrzes.pl:5984/worker')
+const workerDb = new PouchDB<WorkerStatus<string | number>>('http://couchdb.home.agrzes.pl:5984/worker')
 const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
 const ouchWorker = new Ouch(workerDb)
 const router = Router()
 router.post('/fetch', json(),  (req, res) => {
   workerDb.get('github-couchdb-item-pump')
-  .catch((): PouchDB.Core.Document<WorkerStatus> => ({_id: 'github-couchdb-item-pump', sequence: ''}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus>) => {
+  .catch((): PouchDB.Core.Document<WorkerStatus<string | number>> => ({_id: 'github-couchdb-item-pump', sequence: ''}))
+  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus<string | number>>) => {
     fetch({token , since: workerStatus.sequence as string})
     .pipe(tap((issue) => {
       if (issue.updated_at > workerStatus.sequence) {
@@ -89,9 +89,9 @@ function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<Progr
 }
 
 workerDb.get('github-progress-item-pump')
-  .catch((): PouchDB.Core.Document<WorkerStatus> => ({_id: 'github-progress-item-pump'}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus>) => {
-    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus>>()
+  .catch((): PouchDB.Core.Document<WorkerStatus<string | number>> => ({_id: 'github-progress-item-pump'}))
+  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus<string | number>>) => {
+    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus<string | number>>>()
     workerSubject.pipe(debounceTime(1000), ouchWorker.merge(override)).subscribe((updated) => {
       log('Updated worker status %O', updated)
       workerStatus._rev = updated.rev
