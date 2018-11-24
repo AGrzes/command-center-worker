@@ -1,7 +1,7 @@
+import {JiraClient} from '@agrzes/jira-adapter'
 import axios from 'axios'
 import * as debug from 'debug'
 import { json, Router} from 'express'
-import {JiraClient} from 'jira-adapter'
 import * as _ from 'lodash'
 import moment = require('moment')
 import { Ouch, override } from 'ouch-rx'
