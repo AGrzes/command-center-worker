@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { CronJob } from 'cron'
 import * as debug from 'debug'
 import { json, Router } from 'express'
 import {parse as parseLinkHeader, Reference} from 'http-link-header'
@@ -69,6 +70,17 @@ router.post('/fetch', (req, res) => {
       }
     })
 })
+
+new CronJob('0 33 * * * *', () => {
+  log('scheduled run started')
+  githubMirrorWorker.run().subscribe({
+    complete() {
+      log('scheduled run complete')
+    }, error(error) {
+      log(`scheduled run failed with ${error}`)
+    }
+  })
+}).start()
 
 function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<ProgressItem>> {
   if (change.doc) {
