@@ -36,7 +36,7 @@
   "author": "Grzegorz Abramczyk <abramczykg@gmail.com>",
   "license": "MIT",
   "dependencies": {
-    "@agrzes/jira-adapter": "0.0.1",
+    "@agrzes/jira-adapter": "^0.0.2",
     "@types/moment": "^2.13.0",
     "axios": "^0.18.0",
     "debug": "^4.0.1",
