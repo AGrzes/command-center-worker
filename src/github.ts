@@ -7,8 +7,10 @@ import { Ouch, override } from 'ouch-rx'
 import {empty, Observable, Observer, of, Subject} from 'rxjs'
 import { debounceTime, flatMap, map, tap } from 'rxjs/operators'
 import { URL } from 'url'
+import { inspect } from 'util'
 import { ProgressItem, WorkerStatus } from './model'
 import PouchDB from './pouchdb'
+import { Worker } from './worker'
 const log = debug('github:pump')
 interface FetchOptions {
   token: string
@@ -52,63 +54,49 @@ const workerDb = new PouchDB<WorkerStatus<string | number>>('http://couchdb.home
 const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
 const ouchWorker = new Ouch(workerDb)
 const router = Router()
-router.post('/fetch', json(),  (req, res) => {
-  workerDb.get('github-couchdb-item-pump')
-  .catch((): PouchDB.Core.Document<WorkerStatus<string | number>> => ({_id: 'github-couchdb-item-pump', sequence: ''}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus<string | number>>) => {
-    fetch({token , since: workerStatus.sequence as string})
-    .pipe(tap((issue) => {
-      if (issue.updated_at > workerStatus.sequence) {
-        workerStatus.sequence = issue.updated_at
+
+const githubMirrorWorker = new Worker(workerDb, 'github-couchdb-item-pump',
+  (since: string) => fetch({token, since}), '',
+  (issue) => of({...issue, _id: issue.id.toString()}), (issue) => issue.updated_at, ouchGithub)
+
+router.post('/fetch', (req, res) => {
+    githubMirrorWorker
+  .run().subscribe({
+      complete() {
+        res.send()
+      }, error(error) {
+        res.status(500).send(inspect(error))
       }
-    }), map((issue) => ({...issue, _id: issue.id.toString()})), ouchGithub.merge(override))
-    .subscribe({complete() {
-      workerDb.put(workerStatus)
-      res.send()
-    }, error(error) {
-      res.status(500).send(error)
-    }})
-  })
+    })
 })
 
-function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<ProgressItem>> {
-  return of({
-    summary: issue.title,
-    details: issue.body,
-    status: issue.state,
-    defined: issue.created_at,
-    resolved: issue.closed_at,
-    labels: [
-      'github',
-      `repository:${issue.repository.name}`,
-      ..._.compact([issue.milestone ? `milestone:${issue.milestone.name}` : null]),
-      ..._.map(issue.labels, (label) => `label:${label.name}`)
-    ],
-    _id: `github:${issue.id}`
-  })
+function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<ProgressItem>> {
+  if (change.doc) {
+    const issue = change.doc
+    return of({
+      summary: issue.title,
+      details: issue.body,
+      status: issue.state,
+      defined: issue.created_at,
+      resolved: issue.closed_at,
+      labels: [
+        'github',
+        `repository:${issue.repository.name}`,
+        ..._.compact([issue.milestone ? `milestone:${issue.milestone.name}` : null]),
+        ..._.map(issue.labels, (label) => `label:${label.name}`)
+      ],
+      _id: `github:${issue.id}`
+    })
+  } else {
+    return empty()
+  }
 }
 
-workerDb.get('github-progress-item-pump')
-  .catch((): PouchDB.Core.Document<WorkerStatus<string | number>> => ({_id: 'github-progress-item-pump'}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus<string | number>>) => {
-    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus<string | number>>>()
-    workerSubject.pipe(debounceTime(1000), ouchWorker.merge(override)).subscribe((updated) => {
-      log('Updated worker status %O', updated)
-      workerStatus._rev = updated.rev
-    })
-    log('Initiating github-progress-item-pump %O', workerStatus)
-    ouchGithub.changes<any>({include_docs: true, live: true, since: workerStatus.sequence })
-    .pipe(flatMap((change) => {
-      workerStatus.sequence = change.seq
-      if (change.doc) {
-        return of(change.doc)
-      } else {
-        return empty()
-      }
-    }), flatMap(issueToProgressItem), ouchProgress.merge(override))
-    .subscribe((progressItem) => {
-      log('Transformed issue %O', progressItem)
-      workerSubject.next(workerStatus)
-    })
-  })
+const githubProgressWorker = new Worker(workerDb, 'github-progress-item-pump',
+  (sequence) => ouchGithub.changes<any>({include_docs: true, live: true, since: sequence }), '',
+  issueToProgressItem, (change) => change.seq, ouchProgress)
+
+githubProgressWorker.run().subscribe((progressItem) => {
+  log('Transformed issue %O', progressItem)
+})
 export default router
