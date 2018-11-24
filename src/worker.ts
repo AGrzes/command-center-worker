@@ -1,19 +1,19 @@
 import * as debug from 'debug'
 import { MergeFunction, Ouch, override } from 'ouch-rx'
 import { Observable, Subject } from 'rxjs'
-import { map, tap, throttleTime } from 'rxjs/operators'
+import { flatMap, tap, throttleTime } from 'rxjs/operators'
 import { WorkerStatus } from './model'
 import './pouchdb'
 const log = debug('worker')
-export class Worker<K extends object, S> {
+export class Worker<K extends object, S, T> {
   private ouchWorker: Ouch<WorkerStatus<S>>
   constructor(private workerDb: PouchDB.Database<WorkerStatus<S>>, private workerId: string,
               private source: (sequence: S) => Observable<K>,
               private initialSequence: S,
-              private keyFunction: (item: K) => string,
+              private mapFunction: (item: K) => Observable<T & PouchDB.Core.IdMeta>,
               private sequenceFunction: (item: K) => S,
               private sink: Ouch<K>,
-              private mergeFunction: MergeFunction<K & PouchDB.Core.IdMeta, any> = override) {
+              private mergeFunction: MergeFunction<T & PouchDB.Core.IdMeta, any> = override) {
     this.ouchWorker = new Ouch(workerDb)
   }
 
@@ -34,7 +34,7 @@ export class Worker<K extends object, S> {
             workerStatus.sequence = nextSequence
             workerSubject.next(workerStatus)
           }
-        }), map((issue) => ({...issue as object, _id: this.keyFunction(issue)})), this.sink.merge(this.mergeFunction))
+        }), flatMap( this.mapFunction), this.sink.merge(this.mergeFunction))
         .subscribe({complete() {
           workerSubject.next(workerStatus)
           subscriber.complete()

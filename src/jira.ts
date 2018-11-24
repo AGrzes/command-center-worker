@@ -61,21 +61,22 @@ function fetch(updated?: string): Observable<any> {
   }
 }
 
-const jiraWorker = new Worker(workerDb, 'jira-couchdb-item-pump', fetch, '',
-  (issue) => issue.key, (issue) => issue.fields.updated, ouchJira)
+const jiraMirrorWorker = new Worker(workerDb, 'jira-couchdb-item-pump', fetch, '',
+  (issue) => of({...issue, _id: issue.key}), (issue) => issue.fields.updated, ouchJira)
 
 router.post('/fetch', (req, res) => {
-    jiraWorker.run().subscribe({
+    jiraMirrorWorker.run().subscribe({
       complete() {
-      res.send()
-    }, error(error) {
-      res.status(500).send(error)
-    }
-  })
+        res.send()
+      }, error(error) {
+        res.status(500).send(error)
+      }
+    })
 })
 
-function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<ProgressItem>> {
-  if (issue.fields) {
+function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<ProgressItem>> {
+  if (change.doc && change.doc.fields) {
+    const issue = change.doc
     return of({
       summary: issue.fields.summary,
       status: issue.fields.status.name,
@@ -97,27 +98,12 @@ function issueToProgressItem(issue: any): Observable<PouchDB.Core.Document<Progr
   }
 }
 
-workerDb.get('jira-progress-item-pump')
-  .catch((reason): PouchDB.Core.Document<WorkerStatus<string | number>> => ({_id: 'jira-progress-item-pump'}))
-  .then((workerStatus: PouchDB.Core.ExistingDocument<WorkerStatus<string | number>>) => {
-    const workerSubject = new Subject<PouchDB.Core.Document<WorkerStatus<string | number>>>()
-    workerSubject.pipe(debounceTime(1000), ouchWorker.merge(override)).subscribe((updated) => {
-      log('Updated worker status %O', updated)
-      workerStatus._rev = updated.rev
-    })
-    ouchJira.changes<any>({include_docs: true, live: true, since: workerStatus.sequence })
-    .pipe(flatMap((change) => {
-      workerStatus.sequence = change.seq
-      if (change.doc && change.doc.fields) {
-        return of(change.doc)
-      } else {
-        return empty()
-      }
-    }), flatMap(issueToProgressItem), ouchProgress.merge(override))
-    .subscribe((progressItem) => {
-      log('Transformed issue %O', progressItem)
-      workerSubject.next(workerStatus)
-    })
-  })
+const jiraProgressWorker = new Worker(workerDb, 'jira-progress-item-pump',
+  (sequence) => ouchJira.changes<any>({include_docs: true, live: true, since: sequence }), '',
+  issueToProgressItem, (change) => change.seq, ouchProgress)
+
+jiraProgressWorker.run().subscribe((progressItem) => {
+  log('Transformed issue %O', progressItem)
+})
 
 export default router
