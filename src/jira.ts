@@ -92,8 +92,8 @@ function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<Prog
     return of({
       summary: issue.fields.summary,
       status: issue.fields.status.name,
-      defined: issue.fields.created,
-      resolved: issue.fields.resolutiondate,
+      defined: moment(issue.fields.created).toISOString(true),
+      resolved: moment(issue.fields.resolutiondate).toISOString(true),
       labels: [
         'jira',
         issue.fields.issuetype.name,

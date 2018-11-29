@@ -1,12 +1,12 @@
 import axios from 'axios'
 import { CronJob } from 'cron'
 import * as debug from 'debug'
-import { json, Router } from 'express'
+import { Router } from 'express'
 import {parse as parseLinkHeader, Reference} from 'http-link-header'
 import * as _ from 'lodash'
-import { Ouch, override } from 'ouch-rx'
-import {empty, Observable, Observer, of, Subject} from 'rxjs'
-import { debounceTime, flatMap, map, tap } from 'rxjs/operators'
+import moment = require('moment')
+import { Ouch } from 'ouch-rx'
+import {empty, Observable, Observer, of} from 'rxjs'
 import { URL } from 'url'
 import { inspect } from 'util'
 import { ProgressItem, WorkerStatus } from './model'
@@ -89,8 +89,8 @@ function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<Prog
       summary: issue.title,
       details: issue.body,
       status: issue.state,
-      defined: issue.created_at,
-      resolved: issue.closed_at,
+      defined: moment(issue.created_at).toISOString(true),
+      resolved: moment(issue.closed_at).toISOString(true),
       labels: [
         'github',
         `repository:${issue.repository.name}`,

@@ -5,8 +5,8 @@ export interface Category {
 
 export interface ProgressItem {
   summary: string // Textual description of the item
-  defined?: Date // date time of item definition
-  resolved?: Date // date time of item resolution
+  defined?: string // date time of item definition
+  resolved?: string // date time of item resolution
   labels?: string[] // set of additional classification information
   status: 'defined' | 'resolved' // item status
   categories?: Category[] // item categories
