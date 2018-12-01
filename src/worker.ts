@@ -27,21 +27,26 @@ export class Worker<K extends object, S, T> {
           log('Updated worker status %O', updated)
           workerStatus._rev = updated.rev
         })
-        this.source(workerStatus.sequence)
-        .pipe(tap((issue) => {
-          const nextSequence = this.sequenceFunction(issue)
-          if (nextSequence > workerStatus.sequence) {
-            workerStatus.sequence = nextSequence
+        try {
+          this.source(workerStatus.sequence)
+          .pipe(tap((issue) => {
+            const nextSequence = this.sequenceFunction(issue)
+            if (nextSequence > workerStatus.sequence) {
+              workerStatus.sequence = nextSequence
+              workerSubject.next(workerStatus)
+            }
+          }), flatMap( this.mapFunction), this.sink.merge(this.mergeFunction))
+          .subscribe({complete() {
             workerSubject.next(workerStatus)
-          }
-        }), flatMap( this.mapFunction), this.sink.merge(this.mergeFunction))
-        .subscribe({complete() {
-          workerSubject.next(workerStatus)
-          subscriber.complete()
-        }, error(error) {
+            subscriber.complete()
+          }, error(error) {
+            log('Worker error %O', error)
+            subscriber.error(error)
+          }})
+        } catch (error) {
           log('Worker error %O', error)
           subscriber.error(error)
-        }})
+        }
       })
     })
 

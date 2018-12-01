@@ -156,4 +156,23 @@ describe('Worker', function() {
         done()
       }})
   })
+
+  it('should propagate error from source', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = () => {throw new Error()}
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      (item) => of<any>(...mappedItems),
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        expect.fail()
+        done()
+      }, error() {
+        done()
+      }})
+  })
 })
