@@ -17,10 +17,10 @@ function newDb<T>() {
 }
 
 describe('Worker', function() {
-  const initialSequence = 'initialSequence'
+  const initialSequence = '1initialSequence'
   const workerId = 'workerId'
-  const savedSequence = 'savedSequence'
-  const nextSequence = 'nextSequence'
+  const savedSequence = '2savedSequence'
+  const nextSequence = '3nextSequence'
   const sourceItems = [{}]
   const mappedItems = [{_id: '1'}]
   it('should use initial sequence if no one is saved', function(done) {
@@ -31,7 +31,7 @@ describe('Worker', function() {
       workerId,
       source,
       initialSequence,
-      (item) => of<any>(mappedItems),
+      (item) => of<any>(...mappedItems),
       () => nextSequence,
       sink,
       (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
@@ -49,7 +49,7 @@ describe('Worker', function() {
         workerId,
         source,
         initialSequence,
-        (item) => of<any>(mappedItems),
+        (item) => of<any>(...mappedItems),
         () => nextSequence,
         sink,
         (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
@@ -67,7 +67,7 @@ describe('Worker', function() {
       workerId,
       source,
       initialSequence,
-      (item) => of<any>(mappedItems),
+      (item) => of<any>(...mappedItems),
       () => nextSequence,
       sink,
       (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
@@ -76,5 +76,26 @@ describe('Worker', function() {
           done()
         }).catch(done)
       }})
+  })
+
+  it('should update sequence', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = sinon.mock().returns(of(...sourceItems))
+    workerDb.put({_id: workerId, sequence: savedSequence}).then(() => {
+      new Worker(workerDb,
+        workerId,
+        source,
+        initialSequence,
+        (item) => of<any>(...mappedItems),
+        () => nextSequence,
+        sink,
+        (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+          workerDb.get(workerId).then((status) => {
+            expect(status).to.have.property('sequence', nextSequence)
+            done()
+          }).catch(done)
+        }})
+    })
   })
 })
