@@ -100,6 +100,27 @@ describe('Worker', function() {
     })
   })
 
+  it('should not rewind sequence', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = sinon.mock().returns(of(...sourceItems))
+    workerDb.put({_id: workerId, sequence: savedSequence}).then(() => {
+      new Worker(workerDb,
+        workerId,
+        source,
+        initialSequence,
+        (item) => of<any>(...mappedItems),
+        () => initialSequence,
+        sink,
+        (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+          workerDb.get(workerId).then((status) => {
+            expect(status).to.have.property('sequence', savedSequence)
+            done()
+          }).catch(done)
+        }})
+    })
+  })
+
   it('should save mapped items', function(done) {
     const workerDb = newDb<WorkerStatus<string>>()
     const sinkDb = newDb()
