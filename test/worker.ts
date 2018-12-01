@@ -247,4 +247,22 @@ describe('Worker', function() {
         done()
       }})
   })
+  it('should use override function if custom is not provided', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sinkDb = newDb()
+    const sink = new Ouch(sinkDb)
+    const source =  (sequence) => of(...sourceItems)
+    const merge = sinon.spy()
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      (item) => of<any>(...mappedItems),
+      () => nextSequence,
+      sink).run().subscribe({complete() {
+        Promise.all(_.map(mappedItems, (item) => sinkDb.get(item._id))).then((documents) => {
+          done()
+        }).catch(done)
+      }})
+  })
 })
