@@ -139,4 +139,21 @@ describe('Worker', function() {
         }).catch(done)
       }})
   })
+  it('should call map with items', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = (sequence) => of(...sourceItems)
+    const mapFunction = sinon.spy((item) => of<any>(...mappedItems))
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      mapFunction,
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        _.forEach(sourceItems, (item) => expect(mapFunction).to.be.calledWith(item))
+        done()
+      }})
+  })
 })
