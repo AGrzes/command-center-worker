@@ -4,7 +4,7 @@ import 'mocha'
 import { Ouch } from 'ouch-rx'
 import * as pouchdbAdapterMemory from 'pouchdb-adapter-memory'
 import * as PouchDB from 'pouchdb-core'
-import { empty, of } from 'rxjs'
+import { empty, of, throwError, Observable } from 'rxjs'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import { WorkerStatus } from '../src/model'
@@ -166,6 +166,42 @@ describe('Worker', function() {
       source,
       initialSequence,
       (item) => of<any>(...mappedItems),
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        expect.fail()
+        done()
+      }, error() {
+        done()
+      }})
+  })
+  it('should propagate error from merge', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = (sequence) => of(...sourceItems)
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      (item) => {throw new Error()},
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        expect.fail()
+        done()
+      }, error() {
+        done()
+      }})
+  })
+  it('should propagate error from merge', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = (sequence) => of(...sourceItems)
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      (item) => throwError(new Error()) as Observable<any>,
       () => nextSequence,
       sink,
       (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
