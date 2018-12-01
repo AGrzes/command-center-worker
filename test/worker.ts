@@ -1,4 +1,5 @@
 import * as chai from 'chai'
+import * as _ from 'lodash'
 import 'mocha'
 import { Ouch } from 'ouch-rx'
 import * as pouchdbAdapterMemory from 'pouchdb-adapter-memory'
@@ -97,5 +98,24 @@ describe('Worker', function() {
           }).catch(done)
         }})
     })
+  })
+
+  it('should save mapped items', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sinkDb = newDb()
+    const sink = new Ouch(sinkDb)
+    const source = sinon.mock().returns(of(...sourceItems))
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      (item) => of<any>(...mappedItems),
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        Promise.all(_.map(mappedItems, (item) => sinkDb.get(item._id))).then((documents) => {
+          done()
+        }).catch(done)
+      }})
   })
 })
