@@ -5,6 +5,7 @@ import * as yaml from 'js-yaml'
 import * as _ from 'lodash'
 import fetch, { Request } from 'node-fetch'
 import PouchDB from './pouchdb'
+import sync from './service/sync'
 const log = debug('sync')
 interface ServerConfig {
   url: string,
@@ -43,19 +44,6 @@ readFile('config/sync.yaml', 'UTF-8', (err, data) => {
     log(err)
   } else {
     const config: SyncConfig[] = yaml.load(data)
-    _.forEach(config, (item) => {
-      const sourceDb = configureDb(item.from)
-      const targetDb = configureDb(item.to)
-      sourceDb.replicate.to(targetDb, {live: true, retry: true})
-      .on('change', (change) => {
-        log(`change ${change}`)
-      }).on('paused',  (info) => {
-        log(`paused ${info}`)
-      }).on('active', () => {
-        log(`active`)
-      }).on('error', (error) => {
-        log(`error ${error}`)
-      })
-    })
+    _.forEach(config, (item) => sync(configureDb(item.from), configureDb(item.to)))
   }
 })
