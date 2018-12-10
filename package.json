@@ -37,6 +37,7 @@
   "license": "MIT",
   "dependencies": {
     "@agrzes/jira-adapter": "^0.0.2",
+    "@types/mock-fs": "^3.6.30",
     "@types/moment": "^2.13.0",
     "axios": "^0.18.0",
     "cron": "^1.5.0",
@@ -45,6 +46,7 @@
     "http-link-header": "^1.0.0",
     "js-yaml": "^3.12.0",
     "lodash": "^4.17.11",
+    "mock-fs": "^4.7.0",
     "moment": "^2.22.2",
     "node-fetch": "^2.3.0",
     "ouch-rx": "^2.0.2",
