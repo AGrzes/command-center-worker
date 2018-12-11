@@ -3,7 +3,7 @@ import 'mocha'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import setUpSync from '../../src/controller/sync'
-import { DbConfig } from '../../src/pouchdb'
+import { DbConfig } from '../../src/model/pouchdb'
 chai.use(sinonChai)
 const expect = chai.expect
 describe('controller', function() {

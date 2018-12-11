@@ -3,14 +3,10 @@ import {readFile} from 'fs'
 import * as yaml from 'js-yaml'
 import * as _ from 'lodash'
 import setUpSync from './controller/sync'
-import { configureDb, DbConfig } from './pouchdb'
+import { SyncConfig } from './model/sync'
+import { configureDb } from './pouchdb'
 import sync from './service/sync'
 const log = debug('sync')
-
-export interface SyncConfig {
-  from: DbConfig
-  to: DbConfig
-}
 
 readFile('config/sync.yaml', 'UTF-8', (err, data) => {
   if (err) {

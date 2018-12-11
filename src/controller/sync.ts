@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
-import { DbConfig } from '../pouchdb'
-import { SyncConfig } from '../sync'
+import { DbConfig } from '../model/pouchdb'
+import { SyncConfig } from '../model/sync'
 
 export default function setUpSync(config: SyncConfig[],
                                   sync: (from: PouchDB.Database, to: PouchDB.Database) => void,
