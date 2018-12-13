@@ -19,6 +19,7 @@ export function issueToExerciseSession(patterns: RegExp[]):
       _id: change._id,
       activity: (match.groups || {}).activity as Activity,
       progress: Number.parseFloat((match.groups || {}).progress),
+      unit: (match.groups || {}).unit as Unit,
       date: change.resolved
     })).first() || empty()
   }

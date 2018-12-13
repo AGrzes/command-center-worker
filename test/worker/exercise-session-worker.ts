@@ -88,7 +88,7 @@ describe('worker', function() {
           done()
         }, done)
       })
-      it('should return use progress group to determine activity', function(done) {
+      it('should return use progress group to determine progress', function(done) {
         exerciseSessionWorker.issueToExerciseSession([/(?<progress>.*)/])({
           _id: '_id',
           summary: '123.456',
@@ -97,6 +97,19 @@ describe('worker', function() {
         }).pipe(toArray()).subscribe((result) => {
           expect(result).to.containSubset([{
             progress: 123.456
+          }])
+          done()
+        }, done)
+      })
+      it('should return use unit group to determine unit', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([/(?<unit>.*)/])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            unit: 'Test'
           }])
           done()
         }, done)
