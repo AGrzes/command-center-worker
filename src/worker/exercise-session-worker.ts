@@ -18,6 +18,7 @@ export function issueToExerciseSession(patterns: RegExp[]):
     return _(patterns).map((pattern) => pattern.exec(change.summary)).filter().map((match) => of({
       _id: change._id,
       activity: (match.groups || {}).activity as Activity,
+      progress: Number.parseFloat((match.groups || {}).progress),
       date: change.resolved
     })).first() || empty()
   }
