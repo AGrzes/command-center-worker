@@ -29,10 +29,12 @@ export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
       const match = config.regExp.exec(change.summary)
       if (match) {
         const activity: Activity = match.groups && match.groups.activity as Activity || config.defaults.activity
+        const progress: number = match.groups && match.groups.progress ?
+          Number.parseFloat(match.groups.progress) : config.defaults.progress
         return of({
           _id: change._id,
           activity,
-          progress: Number.parseFloat((match.groups || {}).progress),
+          progress,
           unit: (match.groups || {}).unit as Unit,
           date: change.resolved
         })

@@ -127,7 +127,7 @@ describe('worker', function() {
           done()
         }, done)
       })
-      it('should use default activity group to determine activity', function(done) {
+      it('should use default activity to determine activity', function(done) {
         exerciseSessionWorker.issueToExerciseSession([{regExp: /(.*)/, defaults: {activity: 'run'}}])({
           _id: '_id',
           summary: 'Test',
@@ -136,6 +136,19 @@ describe('worker', function() {
         }).pipe(toArray()).subscribe((result) => {
           expect(result).to.containSubset([{
             activity: 'run'
+          }])
+          done()
+        }, done)
+      })
+      it('should use default progress to determine progress', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(.*)/, defaults: {progress: 1}}])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            progress: 1
           }])
           done()
         }, done)
