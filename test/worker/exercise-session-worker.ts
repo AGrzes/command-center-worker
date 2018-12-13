@@ -3,7 +3,6 @@ import 'mocha'
 import { Observable } from 'rxjs'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
-import PouchDB from '../../src/pouchdb'
 import * as worker from '../../src/worker'
 import * as exerciseSessionWorker from '../../src/worker/exercise-session-worker'
 chai.use(sinonChai)
@@ -18,6 +17,7 @@ describe('worker', function() {
       const ouchExerciseSession: any = {}
       const seq = 'seq'
       const data = {}
+      const map: any = {}
       beforeEach(function() {
         workerConstructorSpy.resetHistory()
         changesMock.reset()
@@ -26,23 +26,23 @@ describe('worker', function() {
         workerConstructorSpy.restore()
       })
       it('should create worker', function() {
-        const instance = exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession)
+        const instance = exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession, map)
         expect(instance).to.be.instanceOf(worker.Worker)
       })
       it('should initialize worker', function() {
-        exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession)
+        exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession, map)
         expect(workerConstructorSpy).to.be.calledOnceWith(workerDb, 'exercise-session', sinon.match.func, '',
-          exerciseSessionWorker.issueToExerciseSession, sinon.match.func, ouchExerciseSession)
+          map, sinon.match.func, ouchExerciseSession)
       })
 
       it('should use `change.seq` to measure progress', function() {
-        exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession)
+        exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession, map)
         const sequenceFunction: (item: {seq: string}) => string = workerConstructorSpy.firstCall.args[5]
         expect(sequenceFunction({seq})).to.be.equal(seq)
       })
 
       it('should use `changes` from `ouchJira`', function() {
-        exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession)
+        exerciseSessionWorker.default(workerDb, ouchJira, ouchExerciseSession, map)
         const sourceFunction: (sequence: string) => Observable<any> = workerConstructorSpy.firstCall.args[2]
         changesMock.returns(data)
         expect(sourceFunction(seq)).to.be.equal(data)
