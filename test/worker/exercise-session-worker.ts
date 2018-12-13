@@ -114,6 +114,19 @@ describe('worker', function() {
           done()
         }, done)
       })
+      it('should use first pattern that match', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([/^$/, /.*/])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            date: '2008-11-11'
+          }])
+          done()
+        }, done)
+      })
     })
   })
 })
