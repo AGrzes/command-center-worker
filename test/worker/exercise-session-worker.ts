@@ -153,6 +153,19 @@ describe('worker', function() {
           done()
         }, done)
       })
+      it('should default progress to 1', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(.*)/, defaults: {}}])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            progress: 1
+          }])
+          done()
+        }, done)
+      })
     })
   })
 })

@@ -30,7 +30,7 @@ export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
       if (match) {
         const activity: Activity = match.groups && match.groups.activity as Activity || config.defaults.activity
         const progress: number = match.groups && match.groups.progress ?
-          Number.parseFloat(match.groups.progress) : config.defaults.progress
+          Number.parseFloat(match.groups.progress) : config.defaults.progress || 1
         return of({
           _id: change._id,
           activity,
