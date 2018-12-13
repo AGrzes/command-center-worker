@@ -75,7 +75,7 @@ describe('worker', function() {
           done()
         }, done)
       })
-      it('should return use activity group to determine activity', function(done) {
+      it('should use activity group to determine activity', function(done) {
         exerciseSessionWorker.issueToExerciseSession([{regExp: /(?<activity>.*)/, defaults: {}}])({
           _id: '_id',
           summary: 'Test',
@@ -88,7 +88,7 @@ describe('worker', function() {
           done()
         }, done)
       })
-      it('should return use progress group to determine progress', function(done) {
+      it('should use progress group to determine progress', function(done) {
         exerciseSessionWorker.issueToExerciseSession([{regExp: /(?<progress>.*)/, defaults: {}}])({
           _id: '_id',
           summary: '123.456',
@@ -101,7 +101,7 @@ describe('worker', function() {
           done()
         }, done)
       })
-      it('should return use unit group to determine unit', function(done) {
+      it('should use unit group to determine unit', function(done) {
         exerciseSessionWorker.issueToExerciseSession([{regExp: /(?<unit>.*)/, defaults: {}}])({
           _id: '_id',
           summary: 'Test',
@@ -123,6 +123,19 @@ describe('worker', function() {
         }).pipe(toArray()).subscribe((result) => {
           expect(result).to.containSubset([{
             date: '2008-11-11'
+          }])
+          done()
+        }, done)
+      })
+      it('should use default activity group to determine activity', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(.*)/, defaults: {activity: 'run'}}])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            activity: 'run'
           }])
           done()
         }, done)

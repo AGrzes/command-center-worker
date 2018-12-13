@@ -28,9 +28,10 @@ export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
     return _(configs).map((config) => {
       const match = config.regExp.exec(change.summary)
       if (match) {
+        const activity: Activity = match.groups && match.groups.activity as Activity || config.defaults.activity
         return of({
           _id: change._id,
-          activity: (match.groups || {}).activity as Activity ,
+          activity,
           progress: Number.parseFloat((match.groups || {}).progress),
           unit: (match.groups || {}).unit as Unit,
           date: change.resolved
