@@ -31,8 +31,7 @@ export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
         const activity: Activity = match.groups && match.groups.activity as Activity || config.defaults.activity
         const progress: number = match.groups && match.groups.progress ?
           Number.parseFloat(match.groups.progress) : config.defaults.progress || 1
-        const unit: Unit = match.groups && match.groups.unit as Unit || config.defaults.unit
-
+        const unit: Unit = match.groups && match.groups.unit as Unit || config.defaults.unit || 'session'
         return of({
           _id: change._id,
           activity,

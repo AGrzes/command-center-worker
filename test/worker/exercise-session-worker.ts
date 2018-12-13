@@ -179,6 +179,19 @@ describe('worker', function() {
           done()
         }, done)
       })
+      it('should default unit `session`', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(.*)/, defaults: {}}])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            unit: 'session'
+          }])
+          done()
+        }, done)
+      })
     })
   })
 })
