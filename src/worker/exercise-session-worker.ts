@@ -17,7 +17,7 @@ export function issueToExerciseSession(patterns: RegExp[]):
   return (change: PouchDB.Core.Document<ProgressItem>) => {
     return _(patterns).map((pattern) => pattern.exec(change.summary)).filter().map((match) => of({
       _id: change._id,
-      activity: 'run' as Activity,
+      activity: (match.groups || {}).activity as Activity,
       date: change.resolved
     })).first() || empty()
   }
