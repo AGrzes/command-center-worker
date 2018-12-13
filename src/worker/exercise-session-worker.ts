@@ -12,16 +12,33 @@ export interface ExerciseSession {
   unit?: Unit
 }
 
-export function issueToExerciseSession(patterns: RegExp[]):
+export interface ExerciseSessionConfig {
+  regExp: RegExp,
+  defaults: {
+    activity?: Activity
+    progress?: number
+    unit?: Unit
+  }
+
+}
+
+export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
   (change: PouchDB.Core.Document<ProgressItem>) => Observable<PouchDB.Core.Document<ExerciseSession>> {
   return (change: PouchDB.Core.Document<ProgressItem>) => {
-    return _(patterns).map((pattern) => pattern.exec(change.summary)).filter().map((match) => of({
-      _id: change._id,
-      activity: (match.groups || {}).activity as Activity,
-      progress: Number.parseFloat((match.groups || {}).progress),
-      unit: (match.groups || {}).unit as Unit,
-      date: change.resolved
-    })).first() || empty()
+    return _(configs).map((config) => {
+      const match = config.regExp.exec(change.summary)
+      if (match) {
+        return of({
+          _id: change._id,
+          activity: (match.groups || {}).activity as Activity ,
+          progress: Number.parseFloat((match.groups || {}).progress),
+          unit: (match.groups || {}).unit as Unit,
+          date: change.resolved
+        })
+      } else {
+        return null
+      }
+    }).filter().first() || empty()
   }
 }
 

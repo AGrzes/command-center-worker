@@ -63,7 +63,7 @@ describe('worker', function() {
         }, done)
       })
       it('should return session if summary matches pattern', function(done) {
-        exerciseSessionWorker.issueToExerciseSession([/.*/])({
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /.*/, defaults: {}}])({
           _id: '_id',
           summary: 'Test',
           status: 'resolved',
@@ -76,7 +76,7 @@ describe('worker', function() {
         }, done)
       })
       it('should return use activity group to determine activity', function(done) {
-        exerciseSessionWorker.issueToExerciseSession([/(?<activity>.*)/])({
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(?<activity>.*)/, defaults: {}}])({
           _id: '_id',
           summary: 'Test',
           status: 'resolved',
@@ -89,7 +89,7 @@ describe('worker', function() {
         }, done)
       })
       it('should return use progress group to determine progress', function(done) {
-        exerciseSessionWorker.issueToExerciseSession([/(?<progress>.*)/])({
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(?<progress>.*)/, defaults: {}}])({
           _id: '_id',
           summary: '123.456',
           status: 'resolved',
@@ -102,7 +102,7 @@ describe('worker', function() {
         }, done)
       })
       it('should return use unit group to determine unit', function(done) {
-        exerciseSessionWorker.issueToExerciseSession([/(?<unit>.*)/])({
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /(?<unit>.*)/, defaults: {}}])({
           _id: '_id',
           summary: 'Test',
           status: 'resolved',
@@ -115,7 +115,7 @@ describe('worker', function() {
         }, done)
       })
       it('should use first pattern that match', function(done) {
-        exerciseSessionWorker.issueToExerciseSession([/^$/, /.*/])({
+        exerciseSessionWorker.issueToExerciseSession([{regExp: /^$/, defaults: {}}, {regExp: /.*/, defaults: {}}])({
           _id: '_id',
           summary: 'Test',
           status: 'resolved',
