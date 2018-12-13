@@ -1,5 +1,6 @@
+import * as _ from 'lodash'
 import { Ouch } from 'ouch-rx'
-import { empty, Observable } from 'rxjs'
+import { empty, Observable, of } from 'rxjs'
 import { ProgressItem, WorkerStatus } from '../model'
 import { Worker } from '../worker'
 type Activity = 'run' | 'pool' | 'crunches' | 'bike'
@@ -12,8 +13,14 @@ export interface ExerciseSession {
 }
 
 export function issueToExerciseSession(patterns: RegExp[]):
-  (change: ProgressItem) => Observable<PouchDB.Core.Document<ExerciseSession>> {
-  return (change: ProgressItem) => empty()
+  (change: PouchDB.Core.Document<ProgressItem>) => Observable<PouchDB.Core.Document<ExerciseSession>> {
+  return (change: PouchDB.Core.Document<ProgressItem>) => {
+    return _(patterns).map((pattern) => pattern.exec(change.summary)).filter().map((match) => of({
+      _id: change._id,
+      activity: 'run' as Activity,
+      date: change.resolved
+    })).first() || empty()
+  }
 }
 
 export default function worker(workerDb: PouchDB.Database<WorkerStatus<string>>,

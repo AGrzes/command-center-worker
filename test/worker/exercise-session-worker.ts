@@ -1,12 +1,13 @@
 import * as chai from 'chai'
+import chaiSubset = require('chai-subset')
 import 'mocha'
 import { Observable } from 'rxjs'
+import { toArray } from 'rxjs/operators'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import * as worker from '../../src/worker'
 import * as exerciseSessionWorker from '../../src/worker/exercise-session-worker'
-import { toArray } from 'rxjs/operators';
-chai.use(sinonChai)
+chai.use(sinonChai).use(chaiSubset)
 const expect = chai.expect
 describe('worker', function() {
   describe('exercise-session-worker', function() {
@@ -53,6 +54,7 @@ describe('worker', function() {
     describe('issueToExerciseSession', function() {
       it('should return empty observable when summary does not match any of patterns', function(done) {
         exerciseSessionWorker.issueToExerciseSession([])({
+          _id: '_id',
           summary: 'Test',
           status: 'resolved'
         }).pipe(toArray()).subscribe((result) => {
@@ -60,6 +62,20 @@ describe('worker', function() {
           done()
         }, done)
       })
+      it('should return session if summary matches pattern', function(done) {
+        exerciseSessionWorker.issueToExerciseSession([/.*/])({
+          _id: '_id',
+          summary: 'Test',
+          status: 'resolved',
+          resolved: '2008-11-11'
+        }).pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            date: '2008-11-11'
+          }])
+          done()
+        }, done)
+      })
+
     })
   })
 })
