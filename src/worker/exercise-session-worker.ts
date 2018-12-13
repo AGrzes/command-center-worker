@@ -23,21 +23,21 @@ export interface ExerciseSessionConfig {
 }
 
 export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
-  (change: PouchDB.Core.Document<ProgressItem>) => Observable<PouchDB.Core.Document<ExerciseSession>> {
-  return (change: PouchDB.Core.Document<ProgressItem>) => {
+  (change: PouchDB.Core.ChangesResponseChange<ProgressItem>) => Observable<PouchDB.Core.Document<ExerciseSession>> {
+  return (change: PouchDB.Core.ChangesResponseChange<ProgressItem>) => {
     return _(configs).map((config) => {
-      const match = config.regExp.exec(change.summary)
+      const match = config.regExp.exec(change.doc.summary)
       if (match) {
         const activity: Activity = match.groups && match.groups.activity as Activity || config.defaults.activity
         const progress: number = match.groups && match.groups.progress ?
           Number.parseFloat(match.groups.progress) : config.defaults.progress || 1
         const unit: Unit = match.groups && match.groups.unit as Unit || config.defaults.unit || 'session'
         return of({
-          _id: change._id,
+          _id: change.id,
           activity,
           progress,
           unit,
-          date: change.resolved
+          date: change.doc.resolved
         })
       } else {
         return null
