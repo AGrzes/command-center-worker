@@ -1,12 +1,9 @@
 import * as chai from 'chai'
 import chaiSubset = require('chai-subset')
 import 'mocha'
-import { Observable } from 'rxjs'
 import { toArray } from 'rxjs/operators'
-import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import { ProgressItem } from '../../src/model'
-import * as worker from '../../src/worker'
 import * as exerciseSessionWorker from '../../src/worker/exercise-session-worker'
 chai.use(sinonChai).use(chaiSubset)
 const expect = chai.expect
