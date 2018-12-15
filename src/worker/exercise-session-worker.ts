@@ -45,13 +45,3 @@ export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
     }).filter().first() || empty()
   }
 }
-
-export default function worker(workerDb: PouchDB.Database<WorkerStatus<string>>,
-                               sourceOuch: Ouch<any>,
-                               ouchExerciseSession: Ouch<any>,
-                               mapFunction: (item: any) => Observable<ExerciseSession & PouchDB.Core.IdMeta>):
-                               Worker<any, string, ExerciseSession> {
-  return new Worker(workerDb, 'exercise-session',
-  (sequence) => sourceOuch.changes<any>({include_docs: true, live: true, since: sequence }), '',
-  mapFunction, (change) => change.seq, ouchExerciseSession)
-}

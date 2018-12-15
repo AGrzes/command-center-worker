@@ -5,7 +5,9 @@ import * as _ from 'lodash'
 import { Ouch } from 'ouch-rx'
 import { WorkerStatus } from './model'
 import PouchDB from './pouchdb'
-import worker, {ExerciseSessionConfig, issueToExerciseSession} from './worker/exercise-session-worker'
+import worker from './worker/changes-worker'
+import {ExerciseSessionConfig, issueToExerciseSession} from './worker/exercise-session-worker'
+
 const log = debug('exercise')
 const workerDb = new PouchDB<WorkerStatus<string>>('http://couchdb.home.agrzes.pl:5984/worker')
 const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
@@ -16,7 +18,7 @@ readFile('config/exercise.yaml', 'UTF-8', (error, file) => {
   } else {
     const configs: ExerciseSessionConfig[] = _.map(yaml.load(file),
       ({regExp, defaults}) => ({regExp: new RegExp(regExp), defaults}))
-    worker(workerDb, ouchProgress, ouchExerciseSession,
+    worker('exercise-session', workerDb, ouchProgress, ouchExerciseSession,
       issueToExerciseSession(configs)).run().subscribe((progressItem) => {
         log('Transformed issue %O', progressItem)
       })
