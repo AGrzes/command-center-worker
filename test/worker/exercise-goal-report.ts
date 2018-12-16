@@ -2,6 +2,7 @@ import * as chai from 'chai'
 import chaiSubset = require('chai-subset')
 import 'mocha'
 import { toArray } from 'rxjs/operators'
+import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import { ProgressItem } from '../../src/model'
 import * as exerciseGoalReport from '../../src/worker/exercise-goal-report'
@@ -10,6 +11,17 @@ chai.use(sinonChai).use(chaiSubset)
 const expect = chai.expect
 describe('worker', function() {
   describe('exercise-goal-report', function() {
+    const goal: PouchDB.Core.ExistingDocument<exerciseGoalReport.Goal> = {
+      activity: 'run',
+      archived: false,
+      startDate: '2000-01-01',
+      dueDate: '2001-01-01',
+      target: 100,
+      unit: 'km',
+      meet: true,
+      _id: '_id',
+      _rev: '_rev'
+    }
     describe('issueToExerciseSession', function() {
       const response: PouchDB.Query.Response<ExerciseSession> = {
         offset: 0,
@@ -64,17 +76,6 @@ describe('worker', function() {
           value: null
         }]
       }
-      const goal: PouchDB.Core.ExistingDocument<exerciseGoalReport.Goal> = {
-        activity: 'run',
-        archived: false,
-        startDate: '2000-01-01',
-        dueDate: '2001-01-01',
-        target: 100,
-        unit: 'km',
-        meet: true,
-        _id: '_id',
-        _rev: '_rev'
-      }
       it('should copy goal attributes except `_rev`', function() {
         expect(exerciseGoalReport.calculateProgress(goal, response))
           .to.containSubset(Object.assign({}, goal, {_rev: undefined}))
@@ -125,6 +126,41 @@ describe('worker', function() {
       })
       it('should convert `session` to `session`', function() {
         expect(exerciseGoalReport.normalizeValue(1000, 'session', 'session')).to.be.equals(1000)
+      })
+    })
+    describe('generateGoalReport', function() {
+      let calculateProgressSpy: sinon.SinonSpy
+      before(function() {
+        calculateProgressSpy = sinon.spy(exerciseGoalReport, 'calculateProgress')
+      })
+      beforeEach(function() {
+        calculateProgressSpy.resetHistory()
+      })
+      after(function() {
+        calculateProgressSpy.restore()
+      })
+
+      it('should call `sessionDb.query`', function() {
+        const sessionDb: any = {
+          query: sinon.mock().resolves()
+        }
+        exerciseGoalReport.generateGoalReport(goal, sessionDb)
+        expect(sessionDb.query).to.be.calledWith('index/activity-date',{
+          include_docs: true,
+          startkey: [
+            goal.activity,
+            goal.startDate.substring(0, 4),
+            goal.startDate.substring(5, 7),
+            goal.startDate.substring(8, 10)
+          ],
+          endkey: [
+            goal.activity,
+            goal.dueDate.substring(0, 4),
+            goal.dueDate.substring(5, 7),
+            goal.dueDate.substring(8, 10)
+          ],
+          inclusive_end: true
+        })
       })
     })
   })
