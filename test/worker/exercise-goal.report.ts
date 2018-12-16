@@ -50,6 +50,18 @@ describe('worker', function() {
             unit: 'm'
           },
           value: null
+        }, {
+          id: 'id',
+          key: [],
+          doc: {
+            _id: 'id',
+            _rev: null,
+            date: '2000-01-03',
+            activity: 'run',
+            progress: 1000,
+            unit: 'session'
+          },
+          value: null
         }]
       }
       const goal: PouchDB.Core.ExistingDocument<exerciseGoalReport.Goal> = {
@@ -77,6 +89,12 @@ describe('worker', function() {
             date: '2000-01-02',
             increment: 1,
             total: 3
+          }]})
+      })
+      it('should ignore items that can be converted to correct unit', function() {
+        expect(exerciseGoalReport.calculateProgress(goal, response))
+          .not.to.containSubset({progress: [{
+            date: '2000-01-03'
           }]})
       })
     })
