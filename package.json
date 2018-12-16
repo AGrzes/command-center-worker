@@ -49,7 +49,7 @@
     "mock-fs": "^4.7.0",
     "moment": "^2.22.2",
     "node-fetch": "^2.3.0",
-    "ouch-rx": "^2.0.2",
+    "ouch-rx": "^2.0.3",
     "pouchdb-adapter-http": "^7.0.0",
     "pouchdb-core": "^7.0.0",
     "pouchdb-mapreduce": "^7.0.0",
