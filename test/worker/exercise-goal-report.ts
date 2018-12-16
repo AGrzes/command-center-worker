@@ -1,10 +1,10 @@
 import * as chai from 'chai'
 import chaiSubset = require('chai-subset')
 import 'mocha'
+import { of } from 'rxjs'
 import { toArray } from 'rxjs/operators'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
-import { ProgressItem } from '../../src/model'
 import * as exerciseGoalReport from '../../src/worker/exercise-goal-report'
 import { ExerciseSession } from '../../src/worker/exercise-session-worker'
 chai.use(sinonChai).use(chaiSubset)
@@ -19,63 +19,63 @@ describe('worker', function() {
       target: 100,
       unit: 'km',
       meet: true,
-      _id: '_id',
-      _rev: '_rev'
+      _id: 'id',
+      _rev: 'rev'
+    }
+    const response: PouchDB.Query.Response<ExerciseSession> = {
+      offset: 0,
+      total_rows: 3,
+      rows: [{
+        id: 'id',
+        key: [],
+        doc: {
+          _id: 'id',
+          _rev: null,
+          date: '2000-01-01',
+          activity: 'run',
+          progress: 1000,
+          unit: 'm'
+        },
+        value: null
+      }, {
+        id: 'id',
+        key: [],
+        doc: {
+          _id: 'id',
+          _rev: null,
+          date: '2000-01-01',
+          activity: 'run',
+          progress: 1,
+          unit: 'km'
+        },
+        value: null
+      }, {
+        id: 'id',
+        key: [],
+        doc: {
+          _id: 'id',
+          _rev: null,
+          date: '2000-01-02',
+          activity: 'run',
+          progress: 1000,
+          unit: 'm'
+        },
+        value: null
+      }, {
+        id: 'id',
+        key: [],
+        doc: {
+          _id: 'id',
+          _rev: null,
+          date: '2000-01-03',
+          activity: 'run',
+          progress: 1000,
+          unit: 'session'
+        },
+        value: null
+      }]
     }
     describe('issueToExerciseSession', function() {
-      const response: PouchDB.Query.Response<ExerciseSession> = {
-        offset: 0,
-        total_rows: 3,
-        rows: [{
-          id: 'id',
-          key: [],
-          doc: {
-            _id: 'id',
-            _rev: null,
-            date: '2000-01-01',
-            activity: 'run',
-            progress: 1000,
-            unit: 'm'
-          },
-          value: null
-        }, {
-          id: 'id',
-          key: [],
-          doc: {
-            _id: 'id',
-            _rev: null,
-            date: '2000-01-01',
-            activity: 'run',
-            progress: 1,
-            unit: 'km'
-          },
-          value: null
-        }, {
-          id: 'id',
-          key: [],
-          doc: {
-            _id: 'id',
-            _rev: null,
-            date: '2000-01-02',
-            activity: 'run',
-            progress: 1000,
-            unit: 'm'
-          },
-          value: null
-        }, {
-          id: 'id',
-          key: [],
-          doc: {
-            _id: 'id',
-            _rev: null,
-            date: '2000-01-03',
-            activity: 'run',
-            progress: 1000,
-            unit: 'session'
-          },
-          value: null
-        }]
-      }
       it('should copy goal attributes except `_rev`', function() {
         expect(exerciseGoalReport.calculateProgress(goal, response))
           .to.containSubset(Object.assign({}, goal, {_rev: undefined}))
@@ -142,10 +142,10 @@ describe('worker', function() {
 
       it('should call `sessionDb.query`', function() {
         const sessionDb: any = {
-          query: sinon.mock().resolves()
+          query: sinon.mock().resolves(response)
         }
         exerciseGoalReport.generateGoalReport(goal, sessionDb)
-        expect(sessionDb.query).to.be.calledWith('index/activity-date',{
+        expect(sessionDb.query).to.be.calledWith('index/activity-date', {
           include_docs: true,
           startkey: [
             goal.activity,
@@ -161,6 +161,28 @@ describe('worker', function() {
           ],
           inclusive_end: true
         })
+      })
+    })
+    describe('generateGoalReports', function() {
+      it('should save goal report', function(done) {
+        const goalOuch: any = {
+          all: () => of(goal)
+        }
+        const sinkMock = sinon.mock()
+        const goalReportOuch: any = {
+          merge: sinon.mock().returns(sinkMock)
+        }
+        const sessionDb: any = {
+          query: sinon.mock().resolves(response)
+        }
+        exerciseGoalReport.generateGoalReports(goalOuch, goalReportOuch, sessionDb)
+        expect(goalReportOuch.merge).to.be.calledOnce
+        expect(sinkMock).to.be.calledOnce
+        sinkMock.firstCall.args[0].pipe(toArray()).subscribe((result) => {
+          expect(result)
+          .to.containSubset([Object.assign({}, goal, {_rev: undefined})])
+          done()
+        }, done)
       })
     })
   })
