@@ -98,5 +98,34 @@ describe('worker', function() {
           }]})
       })
     })
+    describe('normalizeValue', function() {
+      it('should convert `m` to `km`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'm', 'km')).to.be.equals(1)
+      })
+      it('should convert `km` to `km`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'km', 'km')).to.be.equals(1000)
+      })
+      it('should not convert `session` to `km`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'session', 'km')).to.be.null
+      })
+      it('should convert `m` to `m`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'm', 'm')).to.be.equals(1000)
+      })
+      it('should convert `km` to `m`', function() {
+        expect(exerciseGoalReport.normalizeValue(1, 'km', 'm')).to.be.equals(1000)
+      })
+      it('should not convert `session` to `m`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'session', 'm')).to.be.null
+      })
+      it('should convert `m` to `session`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'm', 'session')).to.be.equals(1)
+      })
+      it('should convert `km` to `session`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'km', 'session')).to.be.equals(1)
+      })
+      it('should convert `session` to `session`', function() {
+        expect(exerciseGoalReport.normalizeValue(1000, 'session', 'session')).to.be.equals(1000)
+      })
+    })
   })
 })

@@ -38,7 +38,10 @@ export function normalizeValue(value: number, valueUnit: Unit, targetUnit) {
         case 'km': return value
         default: return null
       }
-    case 'session': return 1
+    case 'session': switch (valueUnit) {
+      case 'session': return value
+      default: return 1
+    }
   }
 }
 
