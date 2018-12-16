@@ -3,8 +3,8 @@ import { Ouch } from 'ouch-rx'
 import { empty, Observable, of } from 'rxjs'
 import { ProgressItem, WorkerStatus } from '../model'
 import { Worker } from '../worker'
-type Activity = 'run' | 'pool' | 'crunches' | 'bike'
-type Unit = 'session' | 'm' | 'km'
+export type Activity = 'run' | 'pool' | 'crunches' | 'bike'
+export type Unit = 'session' | 'm' | 'km'
 export interface ExerciseSession {
   activity: Activity
   date: string
