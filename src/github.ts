@@ -5,8 +5,9 @@ import { Router } from 'express'
 import {parse as parseLinkHeader, Reference} from 'http-link-header'
 import * as _ from 'lodash'
 import moment = require('moment')
-import { Ouch } from 'ouch-rx'
+import { Ouch, override } from 'ouch-rx'
 import {empty, Observable, Observer, of} from 'rxjs'
+import { flatMap } from 'rxjs/operators'
 import { URL } from 'url'
 import { inspect } from 'util'
 import { ProgressItem, WorkerStatus } from './model'
@@ -97,7 +98,14 @@ function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<Prog
         ..._.compact([issue.milestone ? `milestone:${issue.milestone.name}` : null]),
         ..._.map(issue.labels, (label) => `label:${label.name}`)
       ],
-      _id: `github:${issue.id}`
+      _id: `github:${issue.id}`,
+      related: [{
+        relation: 'repository',
+        target: {
+          id: issue.repository.id,
+          summary: issue.repository.name
+        }
+      }]
     })
   } else {
     return empty()
@@ -110,5 +118,20 @@ const githubProgressWorker = new Worker(workerDb, 'github-progress-item-pump',
 
 githubProgressWorker.run().subscribe((progressItem) => {
   log('Transformed issue %O', progressItem)
+})
+
+router.post('/transform', (req, res) => {
+  const tlog = _.throttle(log, 1000)
+  ouchGithub.changes<any>({include_docs: true }).pipe(flatMap(issueToProgressItem), ouchProgress.merge(override))
+  .subscribe({
+    next(item) {
+      tlog('Processing items, last %O', item)
+    },
+    complete() {
+      res.send()
+    }, error(error) {
+      res.status(500).send(error)
+    }
+  })
 })
 export default router
