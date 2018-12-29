@@ -103,7 +103,27 @@ function issueToProgressItem(change: any): Observable<PouchDB.Core.Document<Prog
         ..._.map(issue.fields.customfield_10102, (value) => `action-time:${value}`),
         ..._.map(issue.fields.customfield_10000, (value) => `action-context:${value}`)
       ],
-      _id: `jira:${issue.key}`
+      _id: `jira:${issue.key}`,
+      related: _.map(issue.fields.issuelinks, (link) => {
+        const inward = !!link.inwardIssue
+        if (inward) {
+          return {
+            relation: link.type.inward,
+            target: {
+              id: link.inwardIssue.key,
+              summary: link.inwardIssue.fields.summary
+            }
+          }
+        } else {
+          return {
+            relation: link.type.outward,
+            target: {
+              id: link.outwardIssue.key,
+              summary: link.outwardIssue.fields.summary
+            }
+          }
+        }
+      })
     })
   } else {
     return empty()
