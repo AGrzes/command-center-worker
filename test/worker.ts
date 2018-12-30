@@ -79,6 +79,26 @@ describe('Worker', function() {
       }})
   })
 
+  it('should handle error when saving sequence', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    sinon.stub(workerDb, 'put').throwsException()
+    const sink = new Ouch(newDb())
+    const source = sinon.mock().returns(of(...sourceItems))
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      (item) => of<any>(...mappedItems),
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        workerDb.get(workerId).then(() => expect.fail()).catch((error) => {
+          expect(error).to.have.property('name', 'not_found')
+          done()
+        }).catch(done)
+      }})
+  })
+
   it('should update sequence', function(done) {
     const workerDb = newDb<WorkerStatus<string>>()
     const sink = new Ouch(newDb())
