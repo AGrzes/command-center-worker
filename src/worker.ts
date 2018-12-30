@@ -1,19 +1,20 @@
 import * as debug from 'debug'
 import { MergeFunction, Ouch, override } from 'ouch-rx'
-import { Observable, Subject } from 'rxjs'
+import { Observable, OperatorFunction, Subject } from 'rxjs'
 import { flatMap, tap, throttleTime } from 'rxjs/operators'
 import { WorkerStatus } from './model'
 import './pouchdb'
 const log = debug('worker')
-export class Worker<K extends object, S, T> {
+
+export class BaseWorker<K extends object, S, T> {
   private ouchWorker: Ouch<WorkerStatus<S>>
+
   constructor(private workerDb: PouchDB.Database<WorkerStatus<S>>, private workerId: string,
               private source: (sequence: S) => Observable<K>,
               private initialSequence: S,
               private mapFunction: (item: K) => Observable<T & PouchDB.Core.IdMeta>,
               private sequenceFunction: (item: K) => S,
-              private sink: Ouch<K>,
-              private mergeFunction: MergeFunction<T & PouchDB.Core.IdMeta, any> = override) {
+              private operation: OperatorFunction<T, PouchDB.Core.ExistingDocument<T>>) {
     this.ouchWorker = new Ouch(workerDb)
   }
 
@@ -26,7 +27,7 @@ export class Worker<K extends object, S, T> {
         workerSubject.pipe(throttleTime(1000), this.ouchWorker.merge(override)).subscribe((updated) => {
           log('Updated worker status %O', updated)
           workerStatus._rev = updated.rev
-        })
+        }, (error) => log('Failed to update worker status %O', error))
         try {
           this.source(workerStatus.sequence)
           .pipe(tap((issue) => {
@@ -35,7 +36,7 @@ export class Worker<K extends object, S, T> {
               workerStatus.sequence = nextSequence
               workerSubject.next(workerStatus)
             }
-          }), flatMap( this.mapFunction), this.sink.merge(this.mergeFunction))
+          }), flatMap( this.mapFunction), this.operation)
           .subscribe({complete() {
             workerSubject.next(workerStatus)
             subscriber.complete()
@@ -50,5 +51,17 @@ export class Worker<K extends object, S, T> {
       })
     })
 
+  }
+}
+
+export class Worker<K extends object, S, T> extends BaseWorker<K, S, T> {
+  constructor(workerDb: PouchDB.Database<WorkerStatus<S>>, workerId: string,
+              source: (sequence: S) => Observable<K>,
+              initialSequence: S,
+              mapFunction: (item: K) => Observable<T & PouchDB.Core.IdMeta>,
+              sequenceFunction: (item: K) => S,
+              sink: Ouch<K>,
+              mergeFunction: MergeFunction<T & PouchDB.Core.IdMeta, any> = override) {
+    super(workerDb, workerId, source, initialSequence, mapFunction, sequenceFunction, sink.merge(mergeFunction))
   }
 }
