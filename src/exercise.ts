@@ -6,7 +6,8 @@ import { Ouch, override } from 'ouch-rx'
 import { debounce, debounceTime, filter } from 'rxjs/operators'
 import { WorkerStatus } from './model'
 import PouchDB from './pouchdb'
-import worker from './worker/changes-worker'
+import {BaseWorker} from './worker'
+import changesWorker from './worker/changes-worker'
 import { generateGoalReport, generateGoalReports, Goal } from './worker/exercise-goal-report'
 import {ExerciseSession, ExerciseSessionConfig, issueToExerciseSession} from './worker/exercise-session-worker'
 
@@ -23,22 +24,32 @@ readFile('config/exercise.yaml', 'UTF-8', (error, file) => {
   } else {
     const configs: ExerciseSessionConfig[] = _.map(yaml.load(file),
       ({regExp, defaults}) => ({regExp: new RegExp(regExp), defaults}))
-    worker('exercise-session', workerDb, ouchProgress, ouchExerciseSession,
+    changesWorker('exercise-session', workerDb, ouchProgress, ouchExerciseSession,
       issueToExerciseSession(configs)).run().subscribe((progressItem) => {
         log('Transformed issue %O', progressItem)
       })
   }
 })
 
-ouchExerciseSession.changes({live: true}).pipe(debounceTime(1000))
-  .subscribe(() => generateGoalReports(goalOuch, goalReportOuch, exerciseSessionPouch).subscribe(() => {
-    log('Generated progress reports')
-  }, log), log)
+const reportsWorker = new BaseWorker<any, string, any>(workerDb,
+  'exercise-session-progress-report',
+  (sequence) => ouchExerciseSession.changes({live: true, since: sequence}).pipe(debounceTime(1000)),
+  '',
+  () => generateGoalReports(goalOuch, goalReportOuch, exerciseSessionPouch),
+  (change) => change.seq, _.identity)
 
-goalOuch.changes({include_docs: true, live: true}).pipe(filter((goal) => !goal.id.startsWith('_')))
-  .subscribe((change) => generateGoalReport(change.doc, exerciseSessionPouch)
-    .pipe(goalReportOuch.merge(override))
-    .subscribe(() => {
-      log('Generated progress reports based on %O', change)
-    }, log),
-  log)
+reportsWorker.run().subscribe(() => {
+  log('Generated progress reports')
+}, log)
+
+const reportWorker = new BaseWorker<any, string, any>(workerDb,
+  'exercise-goal-progress-report',
+  (sequence) => goalOuch.changes({include_docs: true, live: true, since: sequence})
+    .pipe(filter((goal) => !goal.id.startsWith('_'))),
+  '',
+  (change) => generateGoalReport(change.doc, exerciseSessionPouch),
+  (change) => change.seq, _.identity)
+
+reportWorker.run().subscribe((change) => {
+  log('Generated progress reports based on %O', change)
+}, log)
