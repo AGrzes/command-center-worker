@@ -6,7 +6,7 @@ import { Ouch, override } from 'ouch-rx'
 import { debounce, debounceTime, filter } from 'rxjs/operators'
 import { WorkerStatus } from './model'
 import PouchDB from './pouchdb'
-import {BaseWorker} from './worker'
+import {BaseWorker, Worker} from './worker'
 import changesWorker from './worker/changes-worker'
 import { generateGoalReport, generateGoalReports, Goal } from './worker/exercise-goal-report'
 import {ExerciseSession, ExerciseSessionConfig, issueToExerciseSession} from './worker/exercise-session-worker'
@@ -42,13 +42,13 @@ reportsWorker.run().subscribe(() => {
   log('Generated progress reports')
 }, log)
 
-const reportWorker = new BaseWorker<any, string, any>(workerDb,
+const reportWorker = new Worker<any, string, any>(workerDb,
   'exercise-goal-progress-report',
   (sequence) => goalOuch.changes({include_docs: true, live: true, since: sequence})
     .pipe(filter((goal) => !goal.id.startsWith('_'))),
   '',
   (change) => generateGoalReport(change.doc, exerciseSessionPouch),
-  (change) => change.seq, _.identity)
+  (change) => change.seq, goalReportOuch)
 
 reportWorker.run().subscribe((change) => {
   log('Generated progress reports based on %O', change)
