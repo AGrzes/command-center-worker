@@ -48,7 +48,7 @@ const reportWorker = new Worker<any, string, any>(workerDb,
   (sequence) => goalOuch.changes({include_docs: true, live: true, since: sequence})
     .pipe(filter((goal) => !goal.id.startsWith('_'))),
   '',
-  (change) => change.doc ? generateGoalReport(change.doc, exerciseSessionPouch) : empty(),
+  (change) => !change.deleted ? generateGoalReport(change.doc, exerciseSessionPouch) : empty(),
   (change) => change.seq, goalReportOuch)
 
 reportWorker.run().subscribe((change) => {
