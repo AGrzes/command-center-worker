@@ -10,6 +10,7 @@ import {BaseWorker, Worker} from './worker'
 import changesWorker from './worker/changes-worker'
 import { generateGoalReport, generateGoalReports, Goal } from './worker/exercise-goal-report'
 import {ExerciseSession, ExerciseSessionConfig, issueToExerciseSession} from './worker/exercise-session-worker'
+import { empty } from 'rxjs';
 
 const log = debug('exercise')
 const workerDb = new PouchDB<WorkerStatus<string>>('http://couchdb.home.agrzes.pl:5984/worker')
@@ -47,7 +48,7 @@ const reportWorker = new Worker<any, string, any>(workerDb,
   (sequence) => goalOuch.changes({include_docs: true, live: true, since: sequence})
     .pipe(filter((goal) => !goal.id.startsWith('_'))),
   '',
-  (change) => generateGoalReport(change.doc, exerciseSessionPouch),
+  (change) => change.doc ? generateGoalReport(change.doc, exerciseSessionPouch) : empty(),
   (change) => change.seq, goalReportOuch)
 
 reportWorker.run().subscribe((change) => {
