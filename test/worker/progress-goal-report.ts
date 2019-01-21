@@ -127,6 +127,9 @@ describe('worker', function() {
       it('should convert `session` to `session`', function() {
         expect(progressGoalReport.normalizeValue(1000, 'session', 'session')).to.be.equals(1000)
       })
+      it('should convert `session` to `other`', function() {
+        expect(progressGoalReport.normalizeValue(1000, 'session', 'other')).to.be.null
+      })
     })
     describe('generateGoalReport', function() {
       let calculateProgressSpy: sinon.SinonSpy
