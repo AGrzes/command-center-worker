@@ -5,13 +5,13 @@ import { of } from 'rxjs'
 import { toArray } from 'rxjs/operators'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
-import * as exerciseGoalReport from '../../src/worker/exercise-goal-report'
-import { ExerciseSession } from '../../src/worker/exercise-session-worker'
+import * as progressGoalReport from '../../src/worker/progress-goal-report'
+import { ProgressSession } from '../../src/worker/progress-session-worker'
 chai.use(sinonChai).use(chaiSubset)
 const expect = chai.expect
 describe('worker', function() {
-  describe('exercise-goal-report', function() {
-    const goal: PouchDB.Core.ExistingDocument<exerciseGoalReport.Goal> = {
+  describe('progress-goal-report', function() {
+    const goal: PouchDB.Core.ExistingDocument<progressGoalReport.Goal> = {
       activity: 'run',
       archived: false,
       startDate: '2000-01-01',
@@ -22,7 +22,7 @@ describe('worker', function() {
       _id: 'id',
       _rev: 'rev'
     }
-    const response: PouchDB.Query.Response<ExerciseSession> = {
+    const response: PouchDB.Query.Response<ProgressSession> = {
       offset: 0,
       total_rows: 3,
       rows: [{
@@ -75,13 +75,13 @@ describe('worker', function() {
         value: null
       }]
     }
-    describe('issueToExerciseSession', function() {
+    describe('calculateProgress', function() {
       it('should copy goal attributes except `_rev`', function() {
-        expect(exerciseGoalReport.calculateProgress(goal, response))
+        expect(progressGoalReport.calculateProgress(goal, response))
           .to.containSubset(Object.assign({}, goal, {_rev: undefined}))
       })
       it('should calculate increments and total', function() {
-        expect(exerciseGoalReport.calculateProgress(goal, response))
+        expect(progressGoalReport.calculateProgress(goal, response))
           .to.containSubset({progress: [{
             date: '2000-01-01',
             increment: 2,
@@ -93,7 +93,7 @@ describe('worker', function() {
           }]})
       })
       it('should ignore items that can be converted to correct unit', function() {
-        expect(exerciseGoalReport.calculateProgress(goal, response))
+        expect(progressGoalReport.calculateProgress(goal, response))
           .not.to.containSubset({progress: [{
             date: '2000-01-03'
           }]})
@@ -101,37 +101,37 @@ describe('worker', function() {
     })
     describe('normalizeValue', function() {
       it('should convert `m` to `km`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'm', 'km')).to.be.equals(1)
+        expect(progressGoalReport.normalizeValue(1000, 'm', 'km')).to.be.equals(1)
       })
       it('should convert `km` to `km`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'km', 'km')).to.be.equals(1000)
+        expect(progressGoalReport.normalizeValue(1000, 'km', 'km')).to.be.equals(1000)
       })
       it('should not convert `session` to `km`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'session', 'km')).to.be.null
+        expect(progressGoalReport.normalizeValue(1000, 'session', 'km')).to.be.null
       })
       it('should convert `m` to `m`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'm', 'm')).to.be.equals(1000)
+        expect(progressGoalReport.normalizeValue(1000, 'm', 'm')).to.be.equals(1000)
       })
       it('should convert `km` to `m`', function() {
-        expect(exerciseGoalReport.normalizeValue(1, 'km', 'm')).to.be.equals(1000)
+        expect(progressGoalReport.normalizeValue(1, 'km', 'm')).to.be.equals(1000)
       })
       it('should not convert `session` to `m`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'session', 'm')).to.be.null
+        expect(progressGoalReport.normalizeValue(1000, 'session', 'm')).to.be.null
       })
       it('should convert `m` to `session`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'm', 'session')).to.be.equals(1)
+        expect(progressGoalReport.normalizeValue(1000, 'm', 'session')).to.be.equals(1)
       })
       it('should convert `km` to `session`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'km', 'session')).to.be.equals(1)
+        expect(progressGoalReport.normalizeValue(1000, 'km', 'session')).to.be.equals(1)
       })
       it('should convert `session` to `session`', function() {
-        expect(exerciseGoalReport.normalizeValue(1000, 'session', 'session')).to.be.equals(1000)
+        expect(progressGoalReport.normalizeValue(1000, 'session', 'session')).to.be.equals(1000)
       })
     })
     describe('generateGoalReport', function() {
       let calculateProgressSpy: sinon.SinonSpy
       before(function() {
-        calculateProgressSpy = sinon.spy(exerciseGoalReport, 'calculateProgress')
+        calculateProgressSpy = sinon.spy(progressGoalReport, 'calculateProgress')
       })
       beforeEach(function() {
         calculateProgressSpy.resetHistory()
@@ -144,7 +144,7 @@ describe('worker', function() {
         const sessionDb: any = {
           query: sinon.mock().resolves(response)
         }
-        exerciseGoalReport.generateGoalReport(goal, sessionDb)
+        progressGoalReport.generateGoalReport(goal, sessionDb)
         expect(sessionDb.query).to.be.calledWith('index/activity-date', {
           include_docs: true,
           startkey: [
@@ -175,7 +175,7 @@ describe('worker', function() {
         const sessionDb: any = {
           query: sinon.mock().resolves(response)
         }
-        exerciseGoalReport.generateGoalReports(goalOuch, goalReportOuch, sessionDb)
+        progressGoalReport.generateGoalReports(goalOuch, goalReportOuch, sessionDb)
         expect(goalReportOuch.merge).to.be.calledOnce
         expect(sinkMock).to.be.calledOnce
         sinkMock.firstCall.args[0].pipe(toArray()).subscribe((result) => {

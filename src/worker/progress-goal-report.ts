@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 import { Ouch, override } from 'ouch-rx'
 import { from, Observable } from 'rxjs'
 import { filter, flatMap } from 'rxjs/operators'
-import { Activity, ExerciseSession, Unit } from './exercise-session-worker'
+import { Activity, ProgressSession, Unit } from './progress-session-worker'
 
 export interface Goal {
   activity: Activity
@@ -46,7 +46,7 @@ export function normalizeValue(value: number, valueUnit: Unit, targetUnit) {
 }
 
 export function calculateProgress(goal: PouchDB.Core.Document<Goal>,
-                                  response: PouchDB.Query.Response<ExerciseSession>):
+                                  response: PouchDB.Query.Response<ProgressSession>):
   PouchDB.Core.Document<GoalReport> {
   const progress: ProgressItem[] = []
   let lastDate = null
@@ -75,10 +75,10 @@ export function calculateProgress(goal: PouchDB.Core.Document<Goal>,
   return Object.assign({ progress}, goal, {_rev: undefined})
 }
 
-export function generateGoalReport(goal: PouchDB.Core.Document<Goal>, sessionDb: PouchDB.Database<ExerciseSession> ):
+export function generateGoalReport(goal: PouchDB.Core.Document<Goal>, sessionDb: PouchDB.Database<ProgressSession> ):
   Observable<PouchDB.Core.Document<GoalReport>> {
   return from(
-  sessionDb.query<ExerciseSession>('index/activity-date', {
+  sessionDb.query<ProgressSession>('index/activity-date', {
     include_docs: true,
     startkey: [
       goal.activity,
@@ -98,7 +98,7 @@ export function generateGoalReport(goal: PouchDB.Core.Document<Goal>, sessionDb:
 
 export function generateGoalReports(goalOuch: Ouch<Goal>,
                                     goalReportOuch: Ouch<GoalReport>,
-                                    sessionDb: PouchDB.Database<ExerciseSession> ): Observable<any> {
+                                    sessionDb: PouchDB.Database<ProgressSession> ): Observable<any> {
   return goalOuch.all().pipe(filter((goal) => !goal._id.startsWith('_')), flatMap((goal) => {
     return generateGoalReport(goal, sessionDb)
   }), goalReportOuch.merge(override))

@@ -5,14 +5,14 @@ import { ProgressItem, WorkerStatus } from '../model'
 import { Worker } from '../worker'
 export type Activity = 'run' | 'pool' | 'crunches' | 'bike'
 export type Unit = 'session' | 'm' | 'km'
-export interface ExerciseSession {
+export interface ProgressSession {
   activity: Activity
   date: string
   progress?: number
   unit?: Unit
 }
 
-export interface ExerciseSessionConfig {
+export interface ProgressSessionConfig {
   regExp: RegExp,
   defaults: {
     activity?: Activity
@@ -22,8 +22,8 @@ export interface ExerciseSessionConfig {
 
 }
 
-export function issueToExerciseSession(configs: ExerciseSessionConfig[]):
-  (change: PouchDB.Core.ChangesResponseChange<ProgressItem>) => Observable<PouchDB.Core.Document<ExerciseSession>> {
+export function issueToProgressSession(configs: ProgressSessionConfig[]):
+  (change: PouchDB.Core.ChangesResponseChange<ProgressItem>) => Observable<PouchDB.Core.Document<ProgressSession>> {
   return (change: PouchDB.Core.ChangesResponseChange<ProgressItem>) => {
     return _(configs).map((config) => {
       const match = config.regExp.exec(change.doc.summary)

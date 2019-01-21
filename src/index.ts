@@ -1,7 +1,7 @@
 import * as express from 'express'
-import './exercise'
 import github from './github'
 import jira from './jira'
+import './progress-report'
 import './sync'
 const app = express()
 
