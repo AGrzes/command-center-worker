@@ -3,7 +3,7 @@ import { Ouch } from 'ouch-rx'
 import { empty, Observable, of } from 'rxjs'
 import { ProgressItem } from '../model'
 export type Activity = 'run' | 'pool' | 'crunches' | 'bike' | string
-export type Unit = 'session' | 'm' | 'km'
+export type Unit = 'session' | 'm' | 'km' | 'page' | string
 export interface ProgressSession {
   activity: Activity
   date: string
