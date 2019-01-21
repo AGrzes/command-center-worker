@@ -1,9 +1,8 @@
 import * as _ from 'lodash'
 import { Ouch } from 'ouch-rx'
 import { empty, Observable, of } from 'rxjs'
-import { ProgressItem, WorkerStatus } from '../model'
-import { Worker } from '../worker'
-export type Activity = 'run' | 'pool' | 'crunches' | 'bike'
+import { ProgressItem } from '../model'
+export type Activity = 'run' | 'pool' | 'crunches' | 'bike' | string
 export type Unit = 'session' | 'm' | 'km'
 export interface ProgressSession {
   activity: Activity
