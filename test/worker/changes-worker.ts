@@ -15,7 +15,7 @@ describe('worker', function() {
     const workerDb: any = {}
     const changesMock = sinon.mock()
     const sourceOuch: any = {changes: changesMock}
-    const ouchExerciseSession: any = {merge: mergeMock}
+    const ouchProgressSession: any = {merge: mergeMock}
     const seq = 'seq'
     const data = {}
     const map: any = {}
@@ -33,23 +33,23 @@ describe('worker', function() {
       workerConstructorSpy.restore()
     })
     it('should create worker', function() {
-      const instance = changesWorker.default(progressKey, workerDb, sourceOuch, ouchExerciseSession, map)
+      const instance = changesWorker.default(progressKey, workerDb, sourceOuch, ouchProgressSession, map)
       expect(instance).to.be.instanceOf(worker.Worker)
     })
     it('should initialize worker', function() {
-      changesWorker.default(progressKey, workerDb, sourceOuch, ouchExerciseSession, map)
+      changesWorker.default(progressKey, workerDb, sourceOuch, ouchProgressSession, map)
       expect(workerConstructorSpy).to.be.calledOnceWith(workerDb, progressKey, sinon.match.func, '',
-        map, sinon.match.func, ouchExerciseSession)
+        map, sinon.match.func, ouchProgressSession)
     })
 
     it('should use `change.seq` to measure progress', function() {
-      changesWorker.default(progressKey, workerDb, sourceOuch, ouchExerciseSession, map)
+      changesWorker.default(progressKey, workerDb, sourceOuch, ouchProgressSession, map)
       const sequenceFunction: (item: {seq: string}) => string = workerConstructorSpy.firstCall.args[5]
       expect(sequenceFunction({seq})).to.be.equal(seq)
     })
 
     it('should use `changes` from `sourceOuch`', function() {
-      changesWorker.default(progressKey, workerDb, sourceOuch, ouchExerciseSession, map)
+      changesWorker.default(progressKey, workerDb, sourceOuch, ouchProgressSession, map)
       const sourceFunction: (sequence: string) => Observable<any> = workerConstructorSpy.firstCall.args[2]
       changesMock.returns(data)
       expect(sourceFunction(seq)).to.be.equal(data)
