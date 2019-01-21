@@ -42,6 +42,7 @@ export function normalizeValue(value: number, valueUnit: Unit, targetUnit) {
       case 'session': return value
       default: return 1
     }
+    default: return null
   }
 }
 
