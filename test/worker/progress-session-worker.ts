@@ -18,7 +18,8 @@ describe('worker', function() {
           _id: '_id',
           summary: 'Test',
           status: 'resolved',
-          resolved: '2008-11-11'
+          resolved: '2008-11-11',
+          labels: ['labelA', 'labelB']
         } as any
       }
       it('should return empty observable when summary does not match any of patterns', function(done) {
@@ -32,6 +33,67 @@ describe('worker', function() {
         .pipe(toArray()).subscribe((result) => {
           expect(result).to.containSubset([{
             date: '2008-11-11'
+          }])
+          done()
+        }, done)
+      })
+      it('should return session if any label match', function(done) {
+        progressSessionWorker.issueToProgressSession([{labels: ['labelA'], defaults: {}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            date: '2008-11-11'
+          }])
+          done()
+        }, done)
+      })
+      it('should return empty observable when if none label match', function(done) {
+        progressSessionWorker.issueToProgressSession([{labels: ['labelC'], defaults: {}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.be.empty
+          done()
+        }, done)
+      })
+      it('should use default activity to determine activity for label match', function(done) {
+        progressSessionWorker.issueToProgressSession([{regExp: /(.*)/, defaults: {activity: 'run'}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            activity: 'run'
+          }])
+          done()
+        }, done)
+      })
+      it('should use default progress to determine progress', function(done) {
+        progressSessionWorker.issueToProgressSession([{labels: ['labelA'], defaults: {progress: 2}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            progress: 2
+          }])
+          done()
+        }, done)
+      })
+      it('should default progress to 1', function(done) {
+        progressSessionWorker.issueToProgressSession([{labels: ['labelA'], defaults: {}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            progress: 1
+          }])
+          done()
+        }, done)
+      })
+      it('should use default unit to determine unit', function(done) {
+        progressSessionWorker.issueToProgressSession([{labels: ['labelA'], defaults: {unit: 'xxx'}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            unit: 'xxx'
+          }])
+          done()
+        }, done)
+      })
+      it('should default unit `session`', function(done) {
+        progressSessionWorker.issueToProgressSession([{labels: ['labelA'], defaults: {}}])(change)
+        .pipe(toArray()).subscribe((result) => {
+          expect(result).to.containSubset([{
+            unit: 'session'
           }])
           done()
         }, done)
