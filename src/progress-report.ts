@@ -24,7 +24,7 @@ readFile('config/progress-session.yaml', 'UTF-8', (error, file) => {
     log(error)
   } else {
     const configs: ProgressSessionConfig[] = _.map(yaml.load(file),
-      ({regExp, defaults}) => ({regExp: new RegExp(regExp), defaults}))
+      ({regExp, labels, defaults}) => ({regExp: regExp ? new RegExp(regExp) : null, labels, defaults}))
     changesWorker('progress-session', workerDb, ouchProgress, ouchProgressSession,
       issueToProgressSession(configs)).run().subscribe((progressItem) => {
         log('Transformed issue %O', progressItem)
