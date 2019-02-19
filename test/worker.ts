@@ -5,6 +5,7 @@ import { Ouch } from 'ouch-rx'
 import * as pouchdbAdapterMemory from 'pouchdb-adapter-memory'
 import * as PouchDB from 'pouchdb-core'
 import { empty, Observable, of, throwError } from 'rxjs'
+import { delay, tap } from 'rxjs/operators'
 import * as sinon from 'sinon'
 import * as sinonChai from 'sinon-chai'
 import { WorkerStatus } from '../src/model'
@@ -283,6 +284,27 @@ describe('Worker', function() {
         Promise.all(_.map(mappedItems, (item) => sinkDb.get(item._id))).then((documents) => {
           done()
         }).catch(done)
+      }})
+  })
+
+  it('should not map in parallel', function(done) {
+    const workerDb = newDb<WorkerStatus<string>>()
+    const sink = new Ouch(newDb())
+    const source = (sequence) => of({_id: '1'}, {_id: '2'})
+    let inProgres = 0
+    let parallel = 0
+    const mapFunction = (item) => of<any>(item)
+      .pipe(tap(() => parallel = Math.max(parallel, ++inProgres)), delay(100), tap(() => inProgres--))
+    new Worker(workerDb,
+      workerId,
+      source,
+      initialSequence,
+      mapFunction,
+      () => nextSequence,
+      sink,
+      (newDoc, oldDoc) => newDoc).run().subscribe({complete() {
+        expect(parallel).to.be.eq(1)
+        done()
       }})
   })
 })
