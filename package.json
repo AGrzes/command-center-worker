@@ -75,7 +75,7 @@
     "chai-subset": "^1.6.0",
     "coveralls": "^3.0.2",
     "mocha": "^5.2.0",
-    "nyc": "^13.0.1",
+    "nyc": "^13.3.0",
     "pouchdb-adapter-memory": "^7.0.0",
     "sinon": "^7.1.1",
     "sinon-chai": "^3.3.0",
