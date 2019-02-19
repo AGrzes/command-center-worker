@@ -1,7 +1,7 @@
 import * as debug from 'debug'
 import { MergeFunction, Ouch, override } from 'ouch-rx'
 import { Observable, OperatorFunction, Subject } from 'rxjs'
-import { flatMap, tap, throttleTime } from 'rxjs/operators'
+import { concatMap, tap, throttleTime } from 'rxjs/operators'
 import { WorkerStatus } from './model'
 import './pouchdb'
 const log = debug('worker')
@@ -36,7 +36,7 @@ export class BaseWorker<K extends object, S, T> {
               workerStatus.sequence = nextSequence
               workerSubject.next(workerStatus)
             }
-          }), flatMap( this.mapFunction), this.operation)
+          }), concatMap( this.mapFunction), this.operation)
           .subscribe({complete() {
             workerSubject.next(workerStatus)
             subscriber.complete()
