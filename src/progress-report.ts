@@ -6,7 +6,7 @@ import { Ouch } from 'ouch-rx'
 import { empty } from 'rxjs'
 import { debounceTime, filter } from 'rxjs/operators'
 import { WorkerStatus } from './model'
-import PouchDB from './pouchdb'
+import PouchDB, { setUpViews } from './pouchdb'
 import {BaseWorker, Worker} from './worker'
 import changesWorker from './worker/changes-worker'
 import { generateGoalReport, generateGoalReports, Goal } from './worker/progress-goal-report'
@@ -19,6 +19,27 @@ const progressSessionPouch = new PouchDB<ProgressSession>('http://couchdb.home.a
 const ouchProgressSession = new Ouch(progressSessionPouch)
 const goalOuch = new Ouch<Goal>(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress-goal'))
 const goalReportOuch = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress-goal-report'))
+
+setUpViews(progressSessionPouch, {
+  _id: '_design/index',
+  version: '1.0.0',
+  views: {
+    'activity-date': {
+      map: `
+function (doc) {
+  emit([
+    doc.activity,
+    doc.date.substring(0, 4),
+    doc.date.substring(5, 7),
+    doc.date.substring(8, 10)
+  ]);
+}
+      `
+    }
+  },
+  language: 'javascript'
+})
+
 readFile('config/progress-session.yaml', 'UTF-8', (error, file) => {
   if (error) {
     log(error)
