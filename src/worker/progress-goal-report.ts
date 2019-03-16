@@ -24,7 +24,7 @@ interface GoalReport extends Goal {
   progress: ProgressItem[]
 }
 
-export function normalizeValue(value: number, valueUnit: Unit, targetUnit) {
+export function normalizeValue(value: number, valueUnit: Unit, targetUnit: Unit) {
   switch (targetUnit) {
     case 'm':
       switch (valueUnit) {
@@ -42,7 +42,11 @@ export function normalizeValue(value: number, valueUnit: Unit, targetUnit) {
       case 'session': return value
       default: return 1
     }
-    default: return null
+    default: if (valueUnit === targetUnit) {
+      return value
+    } else {
+      return null
+    }
   }
 }
 
