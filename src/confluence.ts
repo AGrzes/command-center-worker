@@ -1,11 +1,17 @@
 import * as confluenceClient from 'confluence-client'
 import * as debug from 'debug'
+import {JSDOM} from 'jsdom'
 import * as _ from 'lodash'
 import { Ouch } from 'ouch-rx'
 import { Observable, Observer, of } from 'rxjs'
+import { Converter } from 'showdown'
 import { WorkerStatus } from './model'
 import PouchDB from './pouchdb'
 import { Worker } from './worker'
+
+const dom = new JSDOM()
+const showdown = new Converter()
+
 const log = debug('confluence:pump')
 const confluence = confluenceClient({
   username: process.env.CONFLUENCE_USER,
@@ -25,7 +31,7 @@ function fetch(since?: string): Observable<Reminder>  {
       .then((response) => {
         response.results.forEach((result) => observer.next({
           name: result.title,
-          content: _.get(result, 'body.export_view.value'),
+          content: showdown.makeMarkdown(_.get(result, 'body.export_view.value'), dom.window.document),
           lastUpdated: _.get(result, 'history.lastUpdated.when')
         }))
       }).catch((e) => observer.error(e))
