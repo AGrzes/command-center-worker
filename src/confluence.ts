@@ -1,4 +1,5 @@
 import * as confluenceClient from 'confluence-client'
+import { CronJob } from 'cron'
 import * as debug from 'debug'
 import {JSDOM} from 'jsdom'
 import * as _ from 'lodash'
@@ -48,10 +49,13 @@ const confluenceRemindersMirrorWorker = new Worker<Reminder, string, Reminder>(w
   fetch, '',
   (issue) => of({...issue, _id: _.kebabCase(issue.name)}), (issue) => issue.lastUpdated, ouchReminders)
 
-confluenceRemindersMirrorWorker.run().subscribe({
-  complete() {
-    log('scheduled run complete')
-  }, error(error) {
-    log(`scheduled run failed with ${error}`)
-  }
-})
+new CronJob('0 47 * * * *', () => {
+  log('scheduled run started')
+  confluenceRemindersMirrorWorker.run().subscribe({
+    complete() {
+      log('scheduled run complete')
+    }, error(error) {
+      log(`scheduled run failed with ${error}`)
+    }
+  })
+}).start()
