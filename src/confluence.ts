@@ -27,7 +27,8 @@ interface Reminder {
 
 function fetch(since?: string): Observable<Reminder>  {
   return Observable.create((observer: Observer<Reminder>) => {
-      confluence.search('label in (reminder)', ['body.export_view', 'history.lastUpdated'])
+      confluence.search('label in (reminder)' + (since ? ` and lastmodified >= '${since.substr(0, 10)}'` : ''),
+        ['body.export_view', 'history.lastUpdated'])
       .then((response) => {
         response.results.forEach((result) => observer.next({
           name: result.title,
