@@ -40,9 +40,9 @@ function fetch(since?: string): Observable<Reminder>  {
   })
 }
 
-const ouchReminders = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/reminders'))
-const workerDb = new PouchDB<WorkerStatus<string>>('http://couchdb.home.agrzes.pl:5984/worker')
-const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
+const ouchReminders = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/reminders'))
+const workerDb = new PouchDB<WorkerStatus<string>>('http://admin:admin@couchdb.home.agrzes.pl:5984/worker')
+const ouchProgress = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/progress'))
 
 const confluenceRemindersMirrorWorker = new Worker<Reminder, string, Reminder>(workerDb,
   'confluence-reminders-couchdb-item-pump',

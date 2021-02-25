@@ -16,10 +16,10 @@ type Issue = {key: string} & any
 const log = debug('jira:pump')
 
 const router = Router()
-const jiraDb = new PouchDB('http://couchdb.home.agrzes.pl:5984/jira')
+const jiraDb = new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/jira')
 const ouchJira = new Ouch(jiraDb)
-const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
-const workerDb = new PouchDB<WorkerStatus<string | number>>('http://couchdb.home.agrzes.pl:5984/worker')
+const ouchProgress = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/progress'))
+const workerDb = new PouchDB<WorkerStatus<string | number>>('http://admin:admin@couchdb.home.agrzes.pl:5984/worker')
 const ouchWorker = new Ouch(workerDb)
 const sink = new Subject<Issue>()
 sink.pipe(map((issue) => {

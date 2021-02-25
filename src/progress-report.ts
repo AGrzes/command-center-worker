@@ -13,12 +13,12 @@ import { generateGoalReport, generateGoalReports, Goal } from './worker/progress
 import {issueToProgressSession, ProgressSession, ProgressSessionConfig} from './worker/progress-session-worker'
 
 const log = debug('progress-report')
-const workerDb = new PouchDB<WorkerStatus<string>>('http://couchdb.home.agrzes.pl:5984/worker')
-const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
-const progressSessionPouch = new PouchDB<ProgressSession>('http://couchdb.home.agrzes.pl:5984/progress-session')
+const workerDb = new PouchDB<WorkerStatus<string>>('http://admin:admin@couchdb.home.agrzes.pl:5984/worker')
+const ouchProgress = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/progress'))
+const progressSessionPouch = new PouchDB<ProgressSession>('http://admin:admin@couchdb.home.agrzes.pl:5984/progress-session')
 const ouchProgressSession = new Ouch(progressSessionPouch)
-const goalOuch = new Ouch<Goal>(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress-goal'))
-const goalReportOuch = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress-goal-report'))
+const goalOuch = new Ouch<Goal>(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/progress-goal'))
+const goalReportOuch = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/progress-goal-report'))
 
 setUpViews(progressSessionPouch, {
   _id: '_design/index',

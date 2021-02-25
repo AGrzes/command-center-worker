@@ -51,9 +51,9 @@ function fetch(options: FetchOptions): Observable<any> {
   })
 
 }
-const ouchGithub = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/github'))
-const workerDb = new PouchDB<WorkerStatus<string | number>>('http://couchdb.home.agrzes.pl:5984/worker')
-const ouchProgress = new Ouch(new PouchDB('http://couchdb.home.agrzes.pl:5984/progress'))
+const ouchGithub = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/github'))
+const workerDb = new PouchDB<WorkerStatus<string | number>>('http://admin:admin@couchdb.home.agrzes.pl:5984/worker')
+const ouchProgress = new Ouch(new PouchDB('http://admin:admin@couchdb.home.agrzes.pl:5984/progress'))
 const ouchWorker = new Ouch(workerDb)
 const router = Router()
 
